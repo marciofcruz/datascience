@@ -12,3 +12,8 @@ setwd(wd)
 # 
 
 rm(list = ls())
+
+
+StartDate <- as.Date("2020/2/28")
+StopDate <- as.Date("2020/3/1")
+StopDate - StartDate
