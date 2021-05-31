@@ -1,0 +1,11 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/776303/2b68cbe2a03a42a09acaf42c510ada5d
+bundleId: https://api.rpubs.com/api/v1/document/776303/2b68cbe2a03a42a09acaf42c510ada5d
+url: http://rpubs.com/marciofcruz/776303
+when: 1622501915.99738
+lastSyncTime: 1622501915.99738

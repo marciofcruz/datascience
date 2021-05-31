@@ -1,0 +1,214 @@
+---
+title: "Exercício Análise de Crédito - FIA"
+author: "Marcio Cruz"
+date: "31/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+# Funções Personalizadas --------------------------------------------------
+
+meuboxplot <- function(valores, caption_variavel) {
+  boxplot(valores,
+          main = paste("Boxplot ", caption_variavel),
+          xlab = caption_variavel,
+          col = "pink",
+          horizontal = T,
+          varwidth = T,
+          staplewex = T,
+          border = "blue")
+          
+}
+
+meuhist <- function(valores, caption_variavel) {
+  hist(valores,
+       main = paste("Histograma", caption_variavel),
+       ylab = "Frequência",
+       xlab = caption_variavel,
+       col = "pink",
+       include.lowest = T,
+       right = T)
+  
+}
+
+# Instalação de packages --------------------------------------------------
+# install.packages("readxl")
+# install.packages("dplyr")
+# install.packages("moments")
+
+library(moments)
+library(dplyr)
+library(readxl)
+dados <- readxl::read_excel("dados/Exercícios.xlsx", sheet = "Base de Dados 1")
+
+```
+
+```{r dados, echo=FALSE}
+idade.media <- mean(dados$Idade, na.rm = T)  
+```
+### a) Qual a idade média dos clientes presentes no banco de dados?
+Resp: A idade média dos clientes é de `r round(idade.media,2)` anos.
+
+### b) Qual o valor do mínimo, máximo, mediana, Q1 e Q3 da variável idade? Interprete os valores 
+```{r echo=F}
+idade.min <- min(dados$Idade)
+idade.max <- max(dados$Idade)
+idade.mediana <- median(dados$Idade, na.rm = T)
+idade.q1 <- quantile(dados$Idade, 0.25)
+idade.q3 <- quantile(dados$Idade, 0.75)
+meuhist(dados$Idade, "Idades")
+```
+
+**Valores:**
+
+* Min: `r round(idade.min,2)` 
+* Max: `r round(idade.max,2)` 
+* Mediana: `r round(idade.mediana,2)`
+* Q1: `r round(idade.q1,4)`
+* Q3: `r round(idade.q3,4)`
+
+**Interpretação:**
+
+* A amplitude de idade está entre `r round(idade.min,2)` e `r round(idade.max,2)` anos.
+* A interpração é que a faixa etária se estende de jovens adultos até velhice extrema (90 anos ou mais), porém, a média e a mediana demonstram que a maioria dos clientes são idosos na faixa dos 65 anos.
+
+### c) Existem clientes com idades discrepantes? Analise o boxplot.
+```{r echo = F}
+idade.iiq <- idade.q3-idade.q1
+idade.li <- idade.q1 - 1.5 * idade.iiq
+idade.ls <- idade.q3 + 1.5 * idade.iiq
+idade.coeficiente_assimetria <- skewness(dados$Idade)
+idade.discrepantes_a_menor <- length(dados$Idade[dados$Idade < idade.li])
+idade.discrepantes_a_maior <- length(dados$Idade[dados$Idade > idade.ls])
+meuboxplot(dados$Idade, "Idades")
+```
+
+**Interpretação:**
+
+* Visualmente não vemos idades fora do limite inferior ou superior, fato que foi comprovado fazendo a totalização das quantidades que é igual a `r idade.discrepantes_a_maior + idade.discrepantes_a_menor`
+
+### d) Existem clientes que possuem rendimento total discrepante em relação aos demais clientes? Analise o boxplot. 
+```{r echo = F}
+rendimento.valores <- dados$`Rendimento Total`
+rendimento.q1 <- quantile(rendimento.valores, 0.25)
+rendimento.q3 <- quantile(rendimento.valores, 0.75)
+rendimento.iiq <- rendimento.q3 - rendimento.q1 
+rendimento.li <- rendimento.q1 - 1.5 * rendimento.iiq
+rendimento.ls <- rendimento.q3 + 1.5 * rendimento.iiq
+rendimento.media <- mean(dados$`Rendimento Total`)
+rendimento.mediana <- median(dados$`Rendimento Total`)
+rendimento.discrepantes_a_menor <- length(dados$`Rendimento Total`[dados$`Rendimento Total` < rendimento.li])
+rendimento.discrepantes_a_maior <- length(dados$`Rendimento Total`[dados$`Rendimento Total` > rendimento.ls])
+meuboxplot(rendimento.valores, "Rendimentos")
+rm(rendimento.valores)
+
+```
+
+**Interpretação:**
+
+* Existem `r rendimento.discrepantes_a_menor + rendimento.discrepantes_a_maior` clientes que possuem rendimentos discrepantes na base analisada.
+
+### e) A partir de qual valor o rendimento é considerado discrepante?
+
+* Rendimentos com valor acima de R$ `r format(round(rendimento.ls, 2), nsmall = 2)` são considerados discrepantes.
+
+
+### f) A variável rendimento total pode ser considerada simétrica?
+```{r echo = F}
+rendimento.coeficiente_assimetria <- skewness(dados$`Rendimento Total`)
+meuhist(dados$`Rendimento Total`, "Rendimento Total")
+```
+
+**Interpretação:**
+
+* Média: `r format(round(rendimento.media, 2), nsmall = 2)`
+* Mediana: `r format(round(rendimento.mediana, 2), nsmall = 2)`
+* A variável Rendimento Total possui coeficiente de assimétria igual a `r format(round(rendimento.coeficiente_assimetria, 4), nsmall = 4)`, portanto, assimétrica a direita.
+
+### g) Existem clientes que possuem salário discrepante em relação aos demais clientes? Analise o boxplot. 
+```{r echo = F}
+salario.q1 <- quantile(dados$Salário, 0.25)
+salario.q3 <- quantile(dados$Salário, 0.75)
+salario.iiq <- salario.q3 - salario.q1
+salario.media <- mean(dados$Salário)
+salario.mediana <- median(dados$Salário)
+salario.li <- rendimento.q1 - 1.5 * rendimento.iiq
+salario.ls <- rendimento.q3 + 1.5 * rendimento.iiq
+salario.discrepantes_a_menor <- length(dados$Salário[dados$Salário < salario.li])
+salario.discrepantes_a_maior <- length(dados$Salário[dados$Salário > salario.ls])
+salario.coeficiente_assimetria <- moments::skewness(dados$Salário)
+# dados[dados$Salário > salario.ls,]
+meuhist(dados$Salário, "Salários")
+meuboxplot(dados$Salário, "Salários")
+```
+
+**Interpretação:**
+
+* De acordo com o boxplot e analisando os valores há `r salario.discrepantes_a_menor + salario.discrepantes_a_maior` clientes com salário discrepante.
+ 
+
+### h) A partir de qual valor o salário é considerado discrepante?
+Salários com valor acima de R$`r format(round(salario.ls, 2), nsmall = 2)` são considerados discrepantes.
+
+
+### i) A variável salário pode ser considerada simétrica?
+
+**Valores:**
+
+* Média: `r format(round(salario.media, 2), nsmall = 2)`
+* Mediana: `r format(round(salario.mediana, 2), nsmall = 2)`
+
+**Interpretação:**
+
+* A variável Salário possui coeficiente de assimétria igual a `r format(round(salario.coeficiente_assimetria, 4), nsmall = 4)`, portanto, assimétrica a direita.
+
+### j) Existem clientes que possuem limite de cheque especial discrepante em relação aos demais clientes? Analise o boxplot. 
+```{r echo = F}
+cheque.q1 <- quantile(dados$`Limite do Cheque Especial`, 0.25)
+cheque.q3 <- quantile(dados$`Limite do Cheque Especial`, 0.75)
+cheque.iiq <- cheque.q3 - cheque.q1
+cheque.ls <- cheque.q3 + 1.5 * cheque.iiq
+cheque.discrepantes_a_maior <- length(dados$`Limite do Cheque Especial`[dados$`Limite do Cheque Especial` > cheque.ls])
+meuboxplot(dados$`Limite do Cheque Especial`, 'Limite Cheque Especial')
+```
+
+**Interpretação:**
+
+* De acordo com o boxplot e analisando os valores há `r cheque.discrepantes_a_maior` clientes com cheque especial discrepante.
+
+### k) A partir de qual valor o limite de cheque especial é considerado discrepante?
+
+Limites a partir de R$`r format(round(cheque.ls, 2), nsmall = 2)` são considerados discrepantes.
+
+### l) A variável limite de cheque especial pode ser considerada simétrica?
+```{r echo = F}
+cheque.coeficiente_assimetria <- skewness(dados$`Limite do Cheque Especial`)
+cheque.media <- mean(dados$`Limite do Cheque Especial`)
+cheque.mediana <- median(dados$`Limite do Cheque Especial`)
+```
+
+**Valores:**
+
+* Média: `r format(round(cheque.media, 2), nsmall = 2)`
+* Mediana: `r format(round(cheque.mediana, 2), nsmall = 2)`
+
+**Interpretação:**
+
+* A variável possui coeficiente de assimetria de `r round(cheque.coeficiente_assimetria, 4)`, o que confirma que é assimétrica a direita.
+
+
+
+

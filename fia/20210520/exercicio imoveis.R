@@ -58,9 +58,7 @@ dados <- readxl::read_excel("dados/Exercícios.xlsx", sheet = "Base de Dados 3")
 dados.qtde <- dim(dados)[1]
 
 # a) Faça a distribuição de frequências da variável idade. -------------------
-table(dados$Idade_imovel)
 minha_distribuicao(dados$Idade_imovel, 4, "Idade Imóvel")
-
 
 # b) Faça a distribuição de frequências da variável região ----------------
 table(dados$Região)
@@ -97,6 +95,8 @@ valorimovel.max <- max(dados$Mil_reais_m2)
 valorimovel.mediana <- median(dados$Mil_reais_m2)
 valorimovel.mean <- mean(dados$Mil_reais_m2)
 
+skewness(dados$Mil_reais_m2, na.rm = T)
+
 valorimovel.q1 <- quantile(dados$Mil_reais_m2, 0.25)
 valorimovel.q3 <- quantile(dados$Mil_reais_m2, 0.75)
 valorimovel.iiq <- valorimovel.q3 - valorimovel.q1
@@ -105,9 +105,7 @@ valorimovel.li <- valorimovel.q1 - 1.5 * valorimovel.iiq
 valorimovel.ls <- valorimovel.q3 + 1.5 * valorimovel.iiq
 valorimovel.qtde_discrepantes_a_menor <- length(dados$Mil_reais_m2[dados$Mil_reais_m2 < valorimovel.li])
 valorimovel.qtde_discrepantes_a_maior <- length(dados$Mil_reais_m2[dados$Mil_reais_m2 > valorimovel.ls])
-
 boxplot(dados$Mil_reais_m2)
-hist(dados$Mil_reais_m2)
 
 sprintf("Os valores dos m2 de imóveis variam entre %.2f e %.2f, sendo a mediana do valor é de %.2f.
 Quanto a valores discrepantes, há o total de %d abaixo de LI e %d acima de LS.",

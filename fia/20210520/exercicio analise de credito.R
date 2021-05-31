@@ -96,8 +96,9 @@ sprintf("Resp: Rendimentos com valor acima de %.2f são considerados discrepante
 rendimento.coeficiente_assimetria <- skewness(dados$`Rendimento Total`)
 meuhist(dados$`Rendimento Total`, "Rendimento Total")
 sprintf("A variável Rendimento Total possui coeficiente de assimétria igual a %.4f, portanto, assimétrica a direita.", rendimento.coeficiente_assimetria)
+summary(dados$`Rendimento Total`)
 
-#g) Existem clientes que possuem salário discrepante ----------------------
+# g) Existem clientes que possuem salário discrepante ----------------------
 salario.q1 <- quantile(dados$Salário, 0.25)
 salario.q3 <- quantile(dados$Salário, 0.75)
 salario.iiq <- salario.q3 - salario.q1
@@ -111,6 +112,9 @@ meuhist(dados$Salário, "Salários")
 meuboxplot(dados$Salário, "Salários")
 sprintf("Resp: De acordo com o boxplot e analisando os valores há %d clientes com salário discrepante.", salario.discrepantes_a_menor + salario.discrepantes_a_maior)
 
+# h) A partir de qual valor o salário é considerado discrepante?
+
+  
 
 # h) A partir de qual valor o salário é considerado discrepante? ----------
 sprintf("Resp: Salários com valor acima de %.2f são considerados discrepantes.", salario.ls)
