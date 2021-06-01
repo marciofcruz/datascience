@@ -1,0 +1,143 @@
+---
+title: "Exercício Imóveis - FIA"
+author: "Marcio Cruz"
+date: "31/05/2021"
+output: html_document
+---
+
+```{r echo = F}
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+
+rm(list = ls())
+
+
+
+# Instação e carregamento de packages -------------------------------------
+# install.packages("readxl")
+# install.packages("dplyr")
+# install.packages("moments")
+library(moments)
+library(dplyr)
+library(readxl)
+library("stringi")
+
+
+
+# Funções Personalizadas --------------------------------------------------
+meuboxplot <- function(valores, caption_variavel) {
+  boxplot(valores,
+          main = paste("Boxplot ", caption_variavel),
+          xlab = caption_variavel,
+          col = "pink",
+          horizontal = T,
+          varwidth = T,
+          staplewex = T,
+          border = "blue")
+          
+}
+
+minha_distribuicao <- function(nome_variavel, inicio_caption_variavel, caption_variavel) {
+  
+  labels <- c()
+  for (i in 1:dim(table(nome_variavel))) {
+    auxiliar <- substring(rownames(table(nome_variavel))[i], inicio_caption_variavel, stri_length(rownames(table(nome_variavel))[i]))
+    auxiliar2 <- paste(table(nome_variavel)[i])
+    auxiliar3 <- round(prop.table(table(nome_variavel))[i]*100, 4)
+
+    labels <- append(labels, paste(auxiliar, ': ', auxiliar2,' - ', auxiliar3, '%'))
+  }
+  
+  pie(table(nome_variavel),
+      clockwise = T,
+      main =  paste("Gráfico de Pizza para Frequência de", caption_variavel),
+      labels = labels)
+  
+}
+
+
+meuhist <- function(valores, caption_variavel) {
+  hist(valores,
+       main = paste("Histograma", caption_variavel),
+       ylab = "Frequência",
+       xlab = caption_variavel,
+       col = "pink",
+       include.lowest = T,
+       right = T)
+  
+}
+dados <- readxl::read_excel("dados/Exercícios.xlsx", sheet = "Base de Dados 3")
+
+dados.qtde <- dim(dados)[1]
+
+```
+
+### a) Faça a distribuição de frequências da variável idade.
+```{r echo = F}
+minha_distribuicao(dados$Idade_imovel, 4, "Idade Imóvel")
+```
+
+### b) Faça a distribuição de frequências da variável região.
+```{r echo = F}
+minha_distribuicao(dados$Região, 1, "Região")
+```
+
+### c) Qual o valor do mínimo, máximo, mediana, Q1 e Q3 da variável distância ao metrô? Interprete os valores. 
+```{r echo = F}
+# summary(dados$Distancia_metro_Km)
+dmetro.min <- min(dados$Distancia_metro_Km)
+dmetro.max <- max(dados$Distancia_metro_Km)
+dmetro.mediana <- median(dados$Distancia_metro_Km)
+dmetro.media <- mean(dados$Distancia_metro_Km)
+dmetro.q1 <- quantile(dados$Distancia_metro_Km, 0.25)
+dmetro.q3 <- quantile(dados$Distancia_metro_Km, 0.75)
+# boxplot(dados$Distancia_metro_Km)
+dmetro.coeficiente_assimetria <- skewness(dados$Distancia_metro_Km)
+dmetro.iiq <- dmetro.q3 - dmetro.q1
+dmetro.li <- dmetro.q1 - 1.5 * dmetro.iiq
+dmetro.ls <- dmetro.q3 + 1.5 * dmetro.iiq
+dmetro.qtde_discrepantes_a_menor <- length(dados$Distancia_metro_Km[dados$Distancia_metro_Km < dmetro.li])
+dmetro.qtde_discrepantes_a_maior <- length(dados$Distancia_metro_Km[dados$Distancia_metro_Km > dmetro.ls])
+
+```
+
+**Valores:**
+
+* Min: `r round(dmetro.min,2)` 
+* Max: `r round(dmetro.max,2)` 
+* Média: `r round(dmetro.media,2)`
+* Mediana: `r round(dmetro.mediana,2)`
+* Q1: `r round(dmetro.q1,4)`
+* Q3: `r round(dmetro.q3,4)`
+
+**Interpretação:**
+Existem `r dados.qtde` imóveis na base, o coeficiente é baixo, no valor de `r dmetro.coeficiente_assimetria` porém assimétrico a direita.
+A maioria dos imóveis está a aproximadamente `r dmetro.qtde_discrepantes_a_menor` km do metrô.
+
+
+### d) Qual o valor do mínimo, máximo, mediana, Q1 e Q3 da variável valor do imóvel (R$ mil) por m²? Interprete os valores. 
+```{r echo = F}
+valorimovel.min <- min(dados$Mil_reais_m2)
+valorimovel.max <- max(dados$Mil_reais_m2)
+valorimovel.mediana <- median(dados$Mil_reais_m2)
+valorimovel.mean <- mean(dados$Mil_reais_m2)
+
+valorimovel.q1 <- quantile(dados$Mil_reais_m2, 0.25)
+valorimovel.q3 <- quantile(dados$Mil_reais_m2, 0.75)
+valorimovel.iiq <- valorimovel.q3 - valorimovel.q1
+valorimovel.coeficiente_assimetria <- skewness(dados$Mil_reais_m2, na.rm = T)
+valorimovel.li <- valorimovel.q1 - 1.5 * valorimovel.iiq
+valorimovel.ls <- valorimovel.q3 + 1.5 * valorimovel.iiq
+valorimovel.qtde_discrepantes_a_menor <- length(dados$Mil_reais_m2[dados$Mil_reais_m2 < valorimovel.li])
+valorimovel.qtde_discrepantes_a_maior <- length(dados$Mil_reais_m2[dados$Mil_reais_m2 > valorimovel.ls])
+
+meuboxplot(dados$Mil_reais_m2, "M2 Imóvel")
+```
+
+Os valores dos m2 de imóveis variam entre `r round(valorimovel.min,2)` e `r round(valorimovel.max,2)`, sendo a mediana do valor é de `r round(valorimovel.mediana,2)`.
+Quanto a valores discrepantes, há o total de `r valorimovel.qtde_discrepantes_a_maior+valorimovel.qtde_discrepantes_a_menor`.

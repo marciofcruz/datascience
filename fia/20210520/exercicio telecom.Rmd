@@ -1,0 +1,95 @@
+---
+title: "Exercício Telecom - FIA"
+author: "Marcio Cruz"
+date: "31/05/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+
+# Instalação de packages --------------------------------------------------
+# install.packages("readxl")
+# install.packages("dplyr")
+
+library(dplyr)
+library(readxl)
+dados <- readxl::read_excel("dados/Exercícios.xlsx", sheet = "Base de Dados 2")
+```
+
+### a) Quantos clientes a base de dados possui? Quantos são mulheres? E de forma relativa, quantas são mulheres?
+```{r echo = F}
+clientes.qtde <- length(unique(dados$ID))
+clientes.feminino <-  table(dados$Sexo)["Feminino"]
+clientes.prop_feminino <- prop.table(table(dados$Sexo))["Feminino"]
+```
+
+A base de dados possui `r clientes.qtde` clientes. `r clientes.feminino` são mulheres. De forma relativa, há `r clientes.prop_feminino` mulheres.
+
+
+### b) Quais são os valores da média, mediana, mínimo, máximo e quartis do tempo de relacionamento? 
+
+```{r echo = F}
+relacionamento.media <- mean(dados$`Tempo_relacionamento (anos)`)
+relacionamento.mediana <- median(dados$`Tempo_relacionamento (anos)`)
+relacionamento.min <- min(dados$`Tempo_relacionamento (anos)`)
+relacionamento.max <- max(dados$`Tempo_relacionamento (anos)`)
+relacionamento.q1 <- quantile(dados$`Tempo_relacionamento (anos)`, 0.25)
+relacionamento.q3 <- quantile(dados$`Tempo_relacionamento (anos)`, 0.75)
+```
+
+* Min: `r round(relacionamento.min,2)` 
+* Max: `r round(relacionamento.max,2)` 
+* Mediana: `r round(relacionamento.mediana,2)`
+* Q1: `r round(relacionamento.q1,4)`
+* Q3: `r round(relacionamento.q3,4)`
+
+### c) Com base na distribuição de frequências do tempo de relacionamento, qual a proporção de clientes que ainda não completaram 1 ano de relacionamento? 
+```{r echo = F}
+relacionamento.prop0anos <- length(dados$`Tempo_relacionamento (anos)`[dados$`Tempo_relacionamento (anos)`==0]) / 
+                            clientes.qtde
+```
+
+Proporção de clientes com menos de 1 ano é `r format(round(relacionamento.prop0anos, 2), nsmall = 2)`, portanto `r format(round(relacionamento.prop0anos*100, 2), nsmall = 2)`% da base.
+
+### d) Qual a proporção de clientes que possuem 10 anos de relacionamento?
+```{r echo = F}
+relacionamento.prop10anos <- length(dados$`Tempo_relacionamento (anos)`[dados$`Tempo_relacionamento (anos)`==10]) / 
+                            clientes.qtde
+```
+
+Proporção de clientes com 10 anos é `r format(round(relacionamento.prop10anos, 2), nsmall = 2)`, portanto `r format(round(relacionamento.prop10anos*100, 2), nsmall = 2)`% da base.
+
+
+### e) Qual o % de clientes que têm 1 produto? E 2 produtos? Utilize a variável Num_de_Produtos.
+```{r echo = F}
+produto.propqtde1 <- length(dados$Num_de_Produtos[dados$Num_de_Produtos == 1]) / clientes.qtde
+produto.propqtde2 <- length(dados$Num_de_Produtos[dados$Num_de_Produtos == 2]) / clientes.qtde
+
+```
+
+* % clientes que tem 1 produto é:  `r format(round(produto.propqtde1*100, 2), nsmall = 2)`
+* % clientes que tem 2 produtos são: `r format(round(produto.propqtde2*100, 2), nsmall = 2)`
+
+### f) Qual o total de clientes que já cancelaram os produtos? E que não cancelaram? Qual a frequência relativa de cada categoria? Considere 1 para o cliente que cancelou e 0 para o cliente que não cancelou. 
+```{r echo = F}
+clientes.qtde_ja_cancelou <- dim(dados[dados$Cancelou == 1,])[1]
+clientes.qtde_nao_cancelou <- dim(dados[dados$Cancelou == 0,])[1]
+clientes.prop_ja_cancelou <- clientes.qtde_ja_cancelou / clientes.qtde
+clientes.prop_nao_cancelou <- clientes.qtde_nao_cancelou / clientes.qtde
+```
+* O total de clientes que já cancelaram é: `r clientes.qtde_ja_cancelou`
+* O total de clientes que não  cancelaram é: `r clientes.qtde_nao_cancelou`
+* Frequencia Relativa dos que já  cancelaram: `r format(round(clientes.prop_ja_cancelou, 4), nsmall = 4)`
+* Frequencia Relativa dos que não cancelaram: `r format(round(clientes.prop_nao_cancelou, 4), nsmall = 4)`
