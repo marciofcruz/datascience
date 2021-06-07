@@ -1,0 +1,57 @@
+Uma empresa de consultoria possui um faturamento mensal médio de 40 
+milhões de reais com desvio padrão de 10 milhões de reais. Assumindo que o 
+faturamento desta empresa segue uma distribuição normal, qual a 
+probabilidade de que em um determinado mês o faturamento.
+
+(a) seja superior a 50 milhões de reais ?
+P(X > 50000000.00) = 0.1587
+
+(b) esteja entre 30 e 50 milhões de reais?
+P(30000000.00 < X < 50000000.00) = 0.6827
+
+(c) seja inferior a 30 milhões de reais?
+P(X < 30000000.00) = 0.1587
+
+--------------------------
+Uma seguradora possui um gasto com vistoria de automóvel médio de 20 reais 
+com um desvio padrão de 5 reais. Calcule as probabilidades de que, em uma 
+determinada vistoria, o gasto seja:
+
+(a) superior a 30 reais. 
+P(X > 30.00) = 0.0228
+
+(b) inferior a 18 reais.
+P(X < 18.00) = 0.3446
+
+(c) entre 15 e 28 reais.
+P(15.00 < X < 28.00) = 0.7865
+
+----------------------------
+No sistema abaixo, cada componente tem probabilidade 0,7 de funcionar. Se uma das 
+componentes falhar, o sistema não funciona. Suponha independência de funcionamento das 
+componentes, qual a probabilidade de:
+
+(a) O sistema funcionar?
+P(X = 9) é 0.0404
+
+(b) O sistema não funcionar?
+P(X < 9) é 0.9596
+
+c) Exatamente 2 componentes funcionarem?
+P(X = 2) é 0.0039
+
+
+----------------------------
+Estudos meteorológicos indicam que a precipitação pluviométrica mensal, em 
+períodos de seca numa certa região, pode ser considerada seguindo uma 
+distribuição Normal de média 30 mm e variância 16 mm2
+
+(a) Qual seria o valor da precipitação pluviométrica de modo que exista apenas 10% de probabilidade de haver uma precipitação inferior a esse valor?
+z=(x-μ)/σ => -1,2816=(x-30) / 4 => x= 30 - 5,1264 => Resposta: 24,87
+
+(b) Construa um intervalo central em torno da média que contenha 80% dos possíveis valores de precipitação pluviométrica. *
+Achar x1 e x2 => z1=(x1-μ)/σ => -1,2816=(x1-30)/4 => x1=30-5,1264 => x1=24,87 e z2=(x2-μ)/σ => 1,2816=(x2-30) => x2=30+5,1264 => x2=35,13 => Resposta: P(24,87 < X < 35,13)=80
+
+(c) Admitindo esse modelo correto para os próximos 50 meses, em quantos deles esperaríamos uma precipitação pluviométrica superior a 34 mm?
+P(X>34)=0,1587 * 50meses = round(7,93) = 8 meses
+
