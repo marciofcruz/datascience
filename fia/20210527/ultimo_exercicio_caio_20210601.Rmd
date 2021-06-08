@@ -1,0 +1,100 @@
+---
+title: "Exercicio Caio Resolvido"
+author: "João Rafael"
+date: "07/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Faturamento de empresa de consultoria
+
+### Estudos meteorológicos indicam que a precipitação pluviométrica mensal, em períodos de seca numa certa região, pode ser considerada seguindo uma distribuição Normal de média 30 mm e variância 16 mm2
+
+
+### item a) 
+Qual seria o valor da precipitação pluviométrica de modo que exista apenas 10% de probabilidade de haver uma precipitação inferior a esse valor?
+
+```{r}
+mean = 30
+sd = 4 # Variância 16, desvio padrão é 4
+lb = 0
+ub = round(qnorm(0.1,30,4, lower.tail = TRUE),2) # calculando o valor X que tenha equivalência de 10% na cauda inferior
+
+x <- seq(-5,5,length=100)*sd + mean
+hx <- dnorm(x,mean,sd)
+
+plot(x, hx, type="n", xlab="mm Precipitados", ylab="",
+  main="Distribuição de Precipitação Pluviométrica", axes=FALSE)
+
+i <- x >= lb & x <= ub
+lines(x, hx)
+polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red")
+
+area <- pnorm(ub, mean, sd) - pnorm(lb, mean, sd)
+result <- paste("P( X =<",ub,") =",
+   signif(area, digits=3))
+mtext(result,3)
+axis(1, at=seq(0, 50, 2), pos=0)
+
+```
+
+
+### item b)
+Construa um intervalo central em torno da média que contenha 80% dos possíveis valores de precipitação pluviométrica.
+
+```{r}
+mean=30
+sd=4 # Variância 16, desvio padrão é 4
+lb=round(qnorm(0.1,30,4, lower.tail = TRUE),2)
+ub=round(qnorm(0.1,30,4, lower.tail = FALSE),2)
+
+x <- seq(-5,5,length=100)*sd + mean
+hx <- dnorm(x,mean,sd)
+
+plot(x, hx, type="n", xlab="mm Precipitados", ylab="",
+  main="Distribuição de Precipitação Pluviométrica", axes=FALSE)
+
+i <- x >= lb & x <= ub
+lines(x, hx)
+polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red")
+
+area <- pnorm(ub, mean, sd) - pnorm(lb, mean, sd)
+result <- paste("P(",lb, "=< X =<",ub,") =",
+   signif(area, digits=3))
+mtext(result,3)
+axis(1, at=seq(0, 50, 2), pos=0)
+```
+
+### item c)
+Admitindo esse modelo correto para os próximos 50 meses, em quantos deles esperaríamos uma precipitação pluviométrica superior a 34 mm?
+```{r}
+p <- (1 - round(pnorm(34,30,4, lower.tail = TRUE),4))*50
+sprintf("%.3f Meses", p)
+```
+Visualizando a distribuição de probabilidades
+```{r}
+mean=30
+sd=4 # Variância 16, desvio padrão é 4
+lb=34
+ub=round(qnorm(0.9999,30,4, lower.tail = TRUE),2)
+
+x <- seq(-5,5,length=100)*sd + mean
+hx <- dnorm(x,mean,sd)
+
+plot(x, hx, type="n", xlab="mm Precipitados", ylab="",
+  main="Distribuição de Precipitação Pluviométrica", axes=FALSE)
+
+i <- x >= lb & x <= ub
+lines(x, hx)
+polygon(c(lb,x[i],ub), c(0,hx[i],0), col="red")
+
+area <- pnorm(ub, mean, sd) - pnorm(lb, mean, sd)
+result <- paste("P( X > 34) =",
+   signif(area, digits=3))
+mtext(result,3)
+axis(1, at=seq(0, 50, 2), pos=0)
+```
+

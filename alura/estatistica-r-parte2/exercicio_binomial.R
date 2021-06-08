@@ -12,9 +12,9 @@ getwd()
 rm(list = ls())
 
 # Binomial ----------------------------------------------------------------
-n <- 1500 # Elementos de estudo
+n <- 9 # Elementos de estudo
 p <- 0.7
-k <- 8 # Experimentos para obter sucesso
+k <- 2 # Experimentos para obter sucesso
 
 probabilidade.exata <- dbinom(x = k, size = n, prob = p)
 probabilidade.menorouigual <- pbinom(q = k, size = n, prob = p, lower.tail = T) 
