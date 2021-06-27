@@ -1,0 +1,91 @@
+---
+title: "Case Predição Preço de Imóvel - FIA"
+author: "Marcio Fernandes Cruz"
+date: "27/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+```
+
+## Case
+
+![Predição de preços de imóveis - Regressão Linear Simples](img/casepredicaoprecoimovel.jpg)
+
+```{r echo = F}
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+imobiliario <- read_excel("doc/Regressão linear simples.xlsx",sheet="Imobiliario" ) #Função que lê o arquivo xls e salva em uma base de dados R 
+#Verificar variáveis
+# names(imobiliario)
+# summary(imobiliario)
+```
+
+### Hipóteses para β1:
+#### Ho: β1 = 0 (não existe relação linear entre as variáveis)
+#### Ha: β1 # 0 (existe relação linear entre as variáveis)
+
+### Hipóteses para β0:
+#### Ho: β0 = 0 (não existe relação linear entre as variáveis)
+#### Ha: β0 # 0 (existe relação linear entre as variáveis)
+
+
+### Respostas
+
+
+### a) Faça o gráfico de dispersão entre as veriáveis Distância_metro_Km e Mil_reais_m2. Existe relação entre preço do imóvel e distância para o metrô? É positiva ou negativa?
+```{r echo = F}
+plot(imobiliario$ Distancia_metro_Km, imobiliario$Mil_reais_m2, ylab="Preço (Mil R$/m2)", xlab="Distância (km)", col='darkturquoise', xlim = c(0,3), ylim = c(0,20))
+abline(lm(data=imobiliario, Mil_reais_m2 ~ Distancia_metro_Km), col='blue')
+```
+
+### b) Calcule o coeficiente de correlação linear entre as duas variáveis e interprete o coeficiente.
+```{r}
+correlacao = cor(imobiliario$ Distancia_metro_Km, imobiliario$Mil_reais_m2)
+```
+**Interpretação:** Existe uma correlação forte e negativa (r = `r round(correlacao, 4)`) entre as variáveis de preço por metro quadrado e distância ao metrô.
+
+### c) Por meio do modelo de regressão linear simples, teste se existe relação linear entre as variáveis considerando 90% de confiança.
+#### Teste β1
+```{r }
+regressao.b1 <- lm(data=imobiliario, Mil_reais_m2 ~ Distancia_metro_Km)
+
+summary(regressao.b1)
+
+```
+O pvalor (0.0000000000000002) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
+
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
+R2 é 0,5715: 57,15% dos preços de imóveis é explicado pela distância ao metrô, indicando um bom ajuste do modelo aos dados.
+
+### e) Apresente a equação do modelo estimada.
+y = 18.8154 - 7.2166 * x
+
+### f) Estime o valor do m2 do imóvel caso o cliente desejasse morar a 1 km do metrô.
+```{r echo = F}
+x <- 1
+valor.distancia_1km <- 18.8154 - 7.2166 * x
+```
+O valor estimado do imóvel a 1 Km do metrô é R$ `r format(round(valor.distancia_1km, 2), nsmall = 2)`
+
+### g) Para este cliente que deseja morar a 1km do metrô, estimo o valor a ser pago em um apartamento de 70 m2
+```{r echo = F}
+valor_pago.70m2_1km <- 70 * valor.distancia_1km * 1000
+```
+O valor estimado de um apartametno de 70m2 a  a 1 Km do metrô é R$ `r format(round(valor_pago.70m2_1km, 2), nsmall = 2)`
+
+
