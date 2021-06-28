@@ -1,0 +1,77 @@
+---
+title: "Case Rentabilidade  - FIA"
+author: "Marcio Fernandes Cruz"
+date: "27/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+```
+
+## Case
+Um município deseja projetar a rentabilidade média da sua população por meio da taxa de desocupação. A hipótese é que, quanto maior a taxa de desocupação (desemprego) da cidade, menores os salários oferecidos pelo mercado de trabalho. Considere a rentabilidade média do município como a soma dos gastos dividida pela soma dos salários.
+
+```{r echo = F}
+ #install.packages("readxl") #Instalação do pacote. Uma vez instalado, não é necessário instalá-lo novamente no computador
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+rentabilidade <- read_excel("doc/Regressão linear simples.xlsx",sheet="Rentabilidade" ) #Função que lê o arquivo xls e salva em uma base de dados R 
+summary(rentabilidade)
+
+```
+
+### Hipóteses para β1:
+#### Ho: β1 = 0 (não existe relação linear entre as variáveis)
+#### Ha: β1 # 0 (existe relação linear entre as variáveis)
+
+### Hipóteses para β0:
+#### Ho: β0 = 0 (Passa pela origem)
+#### Ha: β0 # 0 (Não passa pela origem)
+
+### a) Calcule o coeficiente de correlação linear entre as variáveis taxa de desocupação e taxa de rentabilidade média A correlação é positiva ou negativa? É uma correlação forte?
+```{r}
+plot(rentabilidade$`Taxa de Desocupação`, rentabilidade$`Taxa de rentabilidade média`, xlab="Taxa de Desocupação", ylab="Taxa de Rentabilidade Media", col='darkturquoise')
+abline(lm(data=rentabilidade, rentabilidade$`Taxa de rentabilidade média` ~ rentabilidade$`Taxa de Desocupação`),  col='blue')
+correlacao <- cor(rentabilidade$`Taxa de Desocupação`, rentabilidade$`Taxa de rentabilidade média`)
+```
+```
+
+**Interpretação:** Existe uma correlação fraca  e negativa (r = `r round(correlacao, 4)`).
+
+### b) Obtenha o modelo de regressão linear simples. Com 90% de confiança, há relação linear entre as variáveis?
+```{r}
+regressao <- lm(data=rentabilidade, rentabilidade$`Taxa de rentabilidade média` ~ rentabilidade$`Taxa de Desocupação`)
+summary(regressao)
+
+```
+#### O pvalor (0.00294) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
+
+### c) Interprete os parâmetros do modelo e o coeficiente de determinação.
+#### β1: Rejeita a hipótese Nula
+#### β0: Rejeita a hipótese Nula
+#### R2 é 0,4341: 43,31% do valor da rentabilidade média é explicado pela  taxa de desocupação, indicando um ajuste regular do modelo aos dados.
+
+### d) Apresente a equação do modelo estimada.
+y_estimado = 37.0747 - 0.7792.x
+
+### e) Estime o valor da rentabilidade média da população de um município que possui 15% de taxa de desocupação
+```{r}
+x <- 15
+y_estimado <- 37.0747 - 0.7792*x
+
+```
+O valor estimado da rentabilidade média da população de um município que possui 15% de desocupação é é R$ `r format(round(y_estimado, 2), nsmall = 2)`

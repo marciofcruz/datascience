@@ -40,16 +40,15 @@ imobiliario <- read_excel("doc/Regressão linear simples.xlsx",sheet="Imobiliari
 #### Ha: β1 # 0 (existe relação linear entre as variáveis)
 
 ### Hipóteses para β0:
-#### Ho: β0 = 0 (não existe relação linear entre as variáveis)
-#### Ha: β0 # 0 (existe relação linear entre as variáveis)
+#### Ho: β0 = 0 (Passa pela origem)
+#### Ha: β0 # 0 (Não passa pela origem)
 
 
 ### Respostas
 
-
 ### a) Faça o gráfico de dispersão entre as veriáveis Distância_metro_Km e Mil_reais_m2. Existe relação entre preço do imóvel e distância para o metrô? É positiva ou negativa?
 ```{r echo = F}
-plot(imobiliario$ Distancia_metro_Km, imobiliario$Mil_reais_m2, ylab="Preço (Mil R$/m2)", xlab="Distância (km)", col='darkturquoise', xlim = c(0,3), ylim = c(0,20))
+plot(imobiliario$ Distancia_metro_Km, imobiliario$Mil_reais_m2, xlab="Distância (km)",ylab="Preço (Mil R$/m2)",  col='darkturquoise', xlim = c(0,3), ylim = c(0,20))
 abline(lm(data=imobiliario, Mil_reais_m2 ~ Distancia_metro_Km), col='blue')
 ```
 
@@ -67,13 +66,18 @@ regressao.b1 <- lm(data=imobiliario, Mil_reais_m2 ~ Distancia_metro_Km)
 summary(regressao.b1)
 
 ```
-O pvalor (0.0000000000000002) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
+
+#### O pvalor (0.0000000000000002) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
 
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
-R2 é 0,5715: 57,15% dos preços de imóveis é explicado pela distância ao metrô, indicando um bom ajuste do modelo aos dados.
+
+#### β1: Rejeita a hipótese Nula
+#### β0: Rejeita a hipótese Nula
+#### R2 é 0,5715: 57,15% dos preços de imóveis é explicado pela distância ao metrô, indicando um bom ajuste do modelo aos dados.
 
 ### e) Apresente a equação do modelo estimada.
-y = 18.8154 - 7.2166 * x
+y_estimado = 18.8154 - 7.2166 * x
+
 
 ### f) Estime o valor do m2 do imóvel caso o cliente desejasse morar a 1 km do metrô.
 ```{r echo = F}
