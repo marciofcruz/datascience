@@ -71,7 +71,7 @@ investimento_ped <- 40000
 investimento_mkt <- 100000
 summary(lm(data = startups, formula =  Lucro ~ Investimento_em_Mkt + Investimento_PeD + Estado))
 
-y_estimado <- 44524.26405 + 0.06502*investimento_mkt + 0.74402*investimento_ped + 5654.55403
+y_estimado <- 44524.26405 + 0.06502*investimento_mkt + 0.74402*investimento_ped + 5654.55403*0
 ```
 O valor estimado é R$ `r format(round(y_estimado, 2), nsmall = 2)`
 

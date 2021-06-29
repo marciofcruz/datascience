@@ -1,0 +1,71 @@
+---
+title: "Predição Valor Imóvel"
+author: "Marcio Cruz"
+date: "29/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(GGally)
+
+imobiliario <- read_excel("doc/Regressão linear múltipla.xlsx", sheet="Imobiliario")
+```
+## Case 
+De acordo com a localização de um imóvel, sabe-se que o valor do mesmo pode variar substancialmente. Na base de dados disponibilizada são fornecidas informações sobre o valor do imóvel (R$) por mil m², a distância para estação de metrô (km), a quantidade de comércios próximos e a idade (em anos) do imóvel, em um bairro bem localizado de grande centro urbano. Quais são as características relacionadas ao imóvel que predizem seu valor?
+
+
+
+## Respostas
+### a) Calcule o coeficiente de correlação entre as variáveis quantitativas do banco de dados. Interprete os coeficientes.
+```{r echo = F}
+ggpairs(imobiliario, title="Correlograma entre variáveis quantitativas") 
+```
+
+**Interpretação:** A explicação do preço do m2 do imóvel tem forte correlação com as variáveis explicativas idade do imóvel, distância ao metrô e quantidade de comércios próximos. Onde, a idade do imóvel e a distância do metrô tem efeito de decrescer o valor do m2, enquanto a quantidade de comércios aumenta o valor.
+
+### b) Realize a análise bidimensional entre as covariáveis existentes e investigue possíveis problemas de multicolinearidade.
+Não existe o problema de colinearidade entre as variáveis da base.
+
+### c) Obtenha o modelo de regressão linear múltipla, considerando um nível de significância de 5% para seleção de variáveis.
+```{r}
+regressao.1 <- lm(data=imobiliario, imobiliario$Mil_reais_m2 ~ imobiliario$Idade_imovel + imobiliario$Distancia_metro_Km + imobiliario$Comercios_proximos)
+summary(regressao.1)
+```
+
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
+#### -0.041448 é a redução do preço do m2 para cada unidade de aumento da idade de imóvel, mantendo as outras variáveis zeradas.
+#### 5.739872 é a redução do preço do m2 para cada unidade de aumento da distância ao metrô, mantendo as outras variáveis zeradas.
+#### 0.183508 é o aumento do preço do m2 para cada unidade de aumento da quantidade de comércios próximos, manteno as outras variáveis zeradas.
+#### 61,97% do preço do m2 é explicado pelas variáveis Idade do Imóvel, distância deste ao metrô e quantidade de comércios próximos.
+
+### e) Apresente a equação do modelo estimado.
+y_estimado <- 16.493840 + (-0.04144 * idade) + (-5.739872*distanciametro) + (0.183508*qtdecomercios)
+
+### f) Caso um comprador esteja procurando um imóvel a 1 km do metrô, com 5 comércios próximos e que tenha 5 anos, qual valor médio ele pagaria em um imóvel de 85 m2?
+```{r}
+idade <- 5
+distanciametro <- 1
+qtdecomercios <- 0
+y_estimado <- (16.493840 + (-0.04144 * idade) + (-5.739872*distanciametro) + (0.183508*qtdecomercios)) 
+valor_estimado <- 85 * y_estimado * 1000
+```
+O valor do imóvel é R$ `r format(round(valor_estimado, 2), nsmall = 2)`
+
+
+
