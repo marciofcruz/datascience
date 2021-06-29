@@ -1,0 +1,86 @@
+---
+title: "Case  Salario Candidato"
+author: "Marcio Cruz"
+date: "28/06/2021"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+```
+
+## Case
+Um recrutador deseja estimar o salário de um candidato, a partir da nota média de várias provas realizadas durante o processo seletivo de admissão na empresa. O objetivo é ajudar os gestores a atribuir o salário do candidato dentro do intervalo já estipulado pela política de remuneração da empresa.
+
+
+```{r echo = F}
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+salario <- read_excel("doc/Regressão linear simples.xlsx",sheet="Salario" ) #Função que lê o arquivo xls e salva em uma base de dados R #Verificar variáveis
+# names(imobiliario)
+# summary(imobiliario)
+```
+
+### Hipóteses para β1:
+#### Ho: β1 = 0 (não existe relação linear entre as variáveis)
+#### Ha: β1 # 0 (existe relação linear entre as variáveis)
+
+### Hipóteses para β0:
+#### Ho: β0 = 0 (Passa pela origem)
+#### Ha: β0 # 0 (Não passa pela origem)
+
+## Respostas
+
+### a) Obtenha o gráfico de dispersão entre as variáveis
+```{r echo = F}
+plot(salario$`Nota Média`, salario$`Salario Mensal`, xlab = "Nota Média", ylab = "Salário Mensal", col='darkturquoise')
+abline(lm(data=salario, salario$`Salario Mensal` ~ salario$`Nota Média`), col='blue')
+```
+
+### b) Calcule o coeficiente de correlação entre as variáveis. É uma correlação positiva ou negativa? É uma correlação forte?
+```{r echo = F}
+correlacao <- cor(salario$`Nota Média`, salario$`Salario Mensal`)
+```
+**Interpretação:** Existe uma correlação forte e positiva (r = `r round(correlacao, 4)`) entre as variáveis de salário e nota média.
+
+### c) Obtenha o modelo de regressão linear simples. Com 90% de confiança, há relação linear entre as variáveis?
+```{r}
+regressao <- lm(data=salario, salario$`Salario Mensal` ~ salario$`Nota Média`)
+# summary(regressao)
+```
+#### O pvalor (0.0000000000344) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
+
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
+#### β1: Rejeita a hipótese Nula
+#### β0: Rejeita a hipótese Nula
+#### R2 é 0,7288: 72,88% dos salários dos candidatos são explicados pelas suas notas nos processos seletivos.
+#### Se um determinado funcionário tiver hipoteticamente nota 0, seu salário será de R$ 2.788,88
+
+### e) Apresente a equação do modelo estimada.
+y_estimado <- 2788.88 + 104.04 * x
+
+### f) Estime o valor do salário para um candidato que possui a nota média igual a 7
+```{r echo = F}
+x <- 7
+y_estimado <- 2788.88 + 104.04 * x
+
+```
+O valor estimado do salário para quem tirou nota 7 na prova é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+
+

@@ -1,0 +1,77 @@
+---
+title: "Limite Credito por Idade e Região"
+author: "Marcio Cruz"
+date: "28/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(GGally)
+
+
+startups  <- read_excel("doc/Regressão linear múltipla.xlsx",sheet="Startups" ) 
+```
+
+## Case 
+Um investidor deseja estimar o lucro de startups de acordo com suas características, com objetivo de tomada de decisão de investimento baseada no lucro projetado da empresa. A base de dados possui características de investimento e região das empresas já investidas do histórico do investidor.
+
+## Respostas
+### a) Calcule o coeficiente de correlação entre as variáveis quantitativas do banco de dados. Interprete os coeficientes.
+```{r echo = F}
+ggpairs(startups, title="Correlograma entre variáveis quantitativas", columns = c("Investimento_PeD", "Investimento_em_Mkt", "Lucro")) 
+```
+
+**Interpretação:**Aparentemente a explicação do Lucro se dá pelas variáveis explicativas de Investimento em P&D e/ou Marketing. 
+
+### b) Realize a análise bidimensional entre as covariáveis existentes e investigue possíveis problemas de multicolinearidade.
+
+Analisando as 2 covariáveis de investimento, estas possuem correlação de 0,662 não possuindo correlação forte.
+
+### c) Obtenha o modelo de regressão linear múltipla, considerando um nível de significância de 10% para seleção de variáveis.
+```{r }
+regressao.1 <- lm(data=startups, Lucro ~ Investimento_em_Mkt + Investimento_PeD)
+summary(regressao.1)
+
+regressao.2 <- lm(data=startups, Lucro ~ Investimento_PeD )
+summary(regressao.2)
+
+regressao.3 <- lm(data=startups, Lucro ~ Investimento_em_Mkt )
+summary(regressao.3)
+
+```
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
+
+#### 0.07094 é o aumento do lucro correspondente ao aumento de 1 unidade no investimento em marketing, quando o investimento em P&D é 0.
+#### 0.73571 é o aumento do lucro correspondente ao aumento de 1 unidade no investimento em P&D, quando o investimento em Mkt é 0.
+#### 82,4% do aumento do lucoro é explicado pelas variáveis de investimento em Mkt e P&D pela Regressão Linear Múltipla.
+
+
+### e) Apresente a equação do modelo estimado.
+y_estimado = 47579.56259 + 0.07094 x investimento_mkt + 0.73571 x investimento_ped
+
+### f) Calcule o lucro projetado de uma startup de São Paulo que apresenta R$40.000 com gastos em P&D e R$100.000 com gastos em marketing
+```{r echo = T}
+investimento_ped <- 40000
+investimento_mkt <- 100000
+summary(lm(data = startups, formula =  Lucro ~ Investimento_em_Mkt + Investimento_PeD + Estado))
+
+y_estimado <- 44524.26405 + 0.06502*investimento_mkt + 0.74402*investimento_ped + 5654.55403
+```
+O valor estimado é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+

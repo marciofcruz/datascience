@@ -1,0 +1,77 @@
+---
+title: "Limite Credito por Idade e Região"
+author: "Marcio Cruz"
+date: "28/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(GGally)
+
+
+dados_lim_cred  <- read_excel("doc/Regressão linear múltipla.xlsx",sheet="Limite_Credito (3)" ) 
+```
+
+## Case 
+Uma instituição financeira tem o objetivo de estimar o valor de Limite de Cheque Especial para seus novos clientes, com base em informações disponíveis em seu banco de dados. Para o estudo, foi disponibilizada uma amostra histórica de clientes com as informações de Idade, Rendimento Total, Salário, Limite de Crédito Imediato, Escolaridade, Gênero e Região para investigar se é possível estimar o Limite do Cheque Especial. Avalie a possibilidade de fornecer uma “regra” por meio de um modelo estatístico, interprete como as informações predizem o evento de interesse e qual a performance desta “regra”.
+
+## Respostas
+### a) Faça o gráfico de dispersão entre as variáveis.
+```{r echo = F}
+names(dados_lim_cred)
+ggpairs(dados_lim_cred, title="Correlograma", columns = c("Idade", "RendimentoTotal", "Salario", "LimitedeCreditoImediato", "LimitedoChequeEspecial" )) 
+
+
+```
+
+### b) Calcule o coeficiente de correlação entre as variáveis quantitativas. Interprete os coeficientes.
+**Interpretação:**  Os coeficientes estão no item "a". As variáveis de Salário e e Rendimento TOtal possuem multicolinearidade entre si. Assim, adotou-se  avariável com a maior correlação que é salário.
+
+### c) Obtenha o modelo de regressão linear múltipla e faça a seleção de variáveis pelo método Backward
+```{r}
+regressao1 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Idade + Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
+summary(regressao1)
+
+regressao2 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
+summary(regressao2)
+
+regressao3 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + Escolaridade + Região + Gênero)
+summary(regressao3)
+
+regressao4 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + Região + Gênero)
+summary(regressao4)
+
+```
+
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação
+**Interpretação:**  Feito a comparação entre as várias variáveis do modelo e, definiu que iria ser utilizado as variáveis
+Salário, Região e Gênero, já que apresentaram uma melhor resposta ao limite de crédito, com explicação de 87,10%.
+
+### e) Apresente a equação do modelo estimado
+y_estimado <- -2309.11531 + (0.46161 x salario) + (2395.81108 x regiao) + (3963.11176 x genero)
+
+### f) Estime o valor do limite de cheque especial para um cliente que tem salário de R$4.850, de São Paulo e gênero masculino.
+```{r}
+x.salario <- 4850
+x.regiao <- 1 # SP
+x.genero <- 1 # Masculino
+y_estimado <- -2309.11531 + (0.46161 * x.salario) + (2395.81108 * x.regiao) + (3963.11176 * x.genero)
+
+```
+O valor estimado do limite do cheque especial é R$ `r format(round(y_estimado, 2), nsmall = 2)`

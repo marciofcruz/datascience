@@ -1,0 +1,81 @@
+---
+title: "Case - Faturamento e-commerce"
+author: "Marcio Cruz"
+date: "28/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r echo = FALSE}
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+```
+
+
+## Case
+Uma empresa de e-commerce deseja projetar o faturamento de acordo com o investimento em anúncios na internet. Os dados são de uma pesquisa de empresas do mesmo segmento do e-commerce. O objetivo é entender a variação no faturamento bruto semanal pelo canal de internet, de acordo com o investimento realizado neste canal.
+
+### Hipóteses para β1:
+#### Ho: β1 = 0 (não existe relação linear entre as variáveis)
+#### Ha: β1 # 0 (existe relação linear entre as variáveis)
+
+### Hipóteses para β0:
+#### Ho: β0 = 0 (Passa pela origem)
+#### Ha: β0 # 0 (Não passa pela origem)
+
+
+```{r echo = FALSE}
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+faturamento <- read_excel("doc/Regressão linear simples.xlsx",sheet="Faturamento" ) #Função que lê o arquivo xls e salva em uma base de dados R 
+#Verificar variáveis
+# faturamento
+```
+
+## Respostas:
+### a) Obtenha o modelo de regressão linear simples. Com 90% de confiança, há relação linear entre as variáveis?
+```{r echo = T}
+
+correlacao <- cor(faturamento$`Anúncio na Internet`, faturamento$`Faturamento Bruto Semanal`)
+
+regressao_2variaveis <- lm(data=faturamento, faturamento$`Faturamento Bruto Semanal` ~ faturamento$`Anúncio na Internet`)
+# summary(regressao_2variaveis)
+
+# regressao_1variavel <- lm(data=faturamento, faturamento$`Faturamento Bruto Semanal` ~ 0+ faturamento$`Anúncio na Internet`)
+# summary(regressao_1variavel)
+```
+**Interpretação:** Existe uma correlação forte e positiva (r = `r round(correlacao, 4)`) entre as variáveis de faturamento bruto mensal e valor de investimento de anúncio na Internet.
+
+#### O pvalor (0.0000000000000002) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
+
+### b) Interprete os parâmetros do modelo e o coeficiente de determinação.
+#### β1: Rejeita a hipótese Nula
+#### β0: Aceita a hipótese Nula
+#### R2 (coeficiente de determinação) é 0,9997: 99,97% da projeção do faturamento é explicado com o aumento do anúncio na Internet, indicando um bom ajuste do modelo aos dados.
+
+
+### c) Apresente a equação do modelo estimada.
+y_estimado = 4.295804 * x
+
+### d) Estime o valor do faturamento para uma empresa que investe R$12.000 na internet.
+```{r echo = F}
+x <- 12000
+y_estimado <- 4.295804 * x
+```
+O valor estimado de faturamento é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+
+
