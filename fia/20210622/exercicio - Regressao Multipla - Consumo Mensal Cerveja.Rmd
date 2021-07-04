@@ -92,6 +92,7 @@ qqline(residuo, col = "steelblue", lwd = 2)
 
 ```{r}
 predito <- fitted.values(regressao.2) # fornece os preditos do modelo
+plot(predito, residuo, main = 'Residuos x Valores ajustados', ylab = 'Residuos', col = "darkturquoise")
 
 mape <- mape(actual = cerveja$Consumo_de_cerveja, predicted = predito) # Soma dos quadrados dos residuos
 sse <- sse(actual = cerveja$Consumo_de_cerveja, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y

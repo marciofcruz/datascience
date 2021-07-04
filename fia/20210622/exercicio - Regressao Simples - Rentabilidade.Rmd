@@ -27,6 +27,7 @@ options(scipen=999)
 Um município deseja projetar a rentabilidade média da sua população por meio da taxa de desocupação. A hipótese é que, quanto maior a taxa de desocupação (desemprego) da cidade, menores os salários oferecidos pelo mercado de trabalho. Considere a rentabilidade média do município como a soma dos gastos dividida pela soma dos salários.
 
 ```{r echo = F}
+library(Metrics)
  #install.packages("readxl") #Instalação do pacote. Uma vez instalado, não é necessário instalá-lo novamente no computador
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 rentabilidade <- read_excel("doc/Regressão linear simples.xlsx",sheet="Rentabilidade" ) #Função que lê o arquivo xls e salva em uma base de dados R 
@@ -74,3 +75,32 @@ y_estimado <- 37.0747 - 0.7792*x
 
 ```
 O valor estimado da rentabilidade média da população de um município que possui 15% de desocupação é é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+
+
+## Análise de Erro
+### Gráficos para verificar Normalidade dos Resíduos
+```{r}
+residuo <- residuals(regressao) # fornece os residuos do modelo
+predito <- fitted.values(regressao) # fornece os preditos do modelo
+
+
+# Graficos para verificar normalidade dos residuos
+par(mfrow = c(1,2))
+hist(residuo, col = "darkturquoise")
+qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo, col = "steelblue", lwd = 2)
+
+plot(predito, residuo, main = 'Residuos x Valores ajustados', ylab = 'Residuos', col = "darkturquoise")
+```
+
+### Quantificação do Modelo
+
+```{r}
+predito <- fitted.values(regressao) # fornece os preditos do modelo
+plot(predito, residuo, main = 'Residuos x Valores ajustados', ylab = 'Residuos', col = "darkturquoise")
+
+mape <- mape(actual = rentabilidade$`Taxa de rentabilidade média` , predicted = predito)
+sse <- sse(actual = rentabilidade$`Taxa de rentabilidade média` , predicted = predito)
+```
+#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
+#### SSE: `r format(round(sse, 4), nsmall = 4)`

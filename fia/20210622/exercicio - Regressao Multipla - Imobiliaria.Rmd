@@ -73,21 +73,95 @@ valor_estimado <- 85 * y_estimado * 1000
 ### Gráficos para verificar Normalidade dos Resíduos
 ```{r}
 residuo <- residuals(regressao.1) # fornece os residuos do modelo
+predito <- fitted.values(regressao.1) # fornece os preditos do modelo
 
-# Graficos para verificar normalidade dos residuos
-par(mfrow = c(1,2))
+par(mfrow = c(1,3))
 hist(residuo, col = "darkturquoise")
+# Graficos para verificar normalidade dos residuos
 qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
 qqline(residuo, col = "steelblue", lwd = 2)
 ```
 
-
-### Quantificação do Modelo
-
+### Verificar resíduo atípico
 ```{r}
-predito <- fitted.values(regressao.1) # fornece os preditos do modelo
-mape <- mape(actual = imobiliario$Mil_reais_m2, predicted = predito) # Soma dos quadrados dos residuos
-sse <- sse(actual = imobiliario$Mil_reais_m2, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
+# Imobiliario$residuo <- residuals(regressao) 
+# Imobiliario$predito <- fitted.values(regressao) 
+# res <- subset(Imobiliario,Imobiliario$residuo <- 5)
+```
+
+### Analisar a linearidade
+```{r}
+par(mfrow = c(1,3))
+plot(imobiliario$Idade_imovel, imobiliario$Mil_reais_m2,col = "darkturquoise")
+plot(imobiliario$Distancia_metro_Km, imobiliario$Mil_reais_m2,col = "darkturquoise")
+plot(imobiliario$Comercios_proximos, imobiliario$Mil_reais_m2,col = "darkturquoise")
+```
+
+
+### Segmentação
+```{r}
+novos <- subset(imobiliario,imobiliario$Idade_imovel <=  25)
+antigos <- subset(imobiliario,imobiliario$Idade_imovel > 25)
+```
+
+
+### Imóveis Novos
+```{r}
+regressao_novos <- lm(data = novos,
+                Mil_reais_m2 ~ 
+                  Idade_imovel + Distancia_metro_Km + 
+                  Comercios_proximos)
+summary(regressao_novos)
+
+residuo_novos <- residuals(regressao_novos) 
+predito_novos <- fitted.values(regressao_novos)
+
+par(mfrow = c(1,3))
+plot(predito_novos, residuo_novos, main = 'Residuos x Valores ajustados - Novos', ylab = 'Residuos', col = "darkturquoise")
+hist(residuo_novos, col = "darkturquoise")
+qqnorm(residuo_novos, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo_novos, col = "steelblue", lwd = 2)
+
+residuo_novos <- residuals(regressao_novos) 
+predito_novos <- fitted.values(regressao_novos)
+```
+
+
+### Imóveis Antigos
+```{r}
+regressao_antigos <- lm(data = antigos,
+                Mil_reais_m2 ~ 
+                  Idade_imovel + Distancia_metro_Km + 
+                  Comercios_proximos)
+summary(regressao_antigos)
+
+residuo_antigos <- residuals(regressao_antigos) 
+predito_antigos <- fitted.values(regressao_antigos)
+
+par(mfrow = c(1,3))
+plot(predito_antigos, residuo_antigos, main = 'Residuos x Valores ajustados - Antigos', ylab = 'Residuos', col = "darkturquoise")
+hist(residuo_antigos, col = "darkturquoise")
+qqnorm(residuo_antigos, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo_antigos, col = "steelblue", lwd = 2)
+
+residuo_antigos <- residuals(regressao_antigos) 
+predito_antigos <- fitted.values(regressao_antigos)
+```
+
+
+### Quantificação do Modelo para Imóveis Novos
+
+```{r }
+mape <- mape(actual = novos$Mil_reais_m2, predicted = predito_novos) # Soma dos quadrados dos residuos
+sse <- sse(actual = novos$Mil_reais_m2, predicted = predito_novos) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
+```
+#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
+#### SSE: `r format(round(sse, 4), nsmall = 4)`
+
+### Quantificação do Modelo para Imóveis Antigos
+```{r}
+mape <- mape(actual = antigos$Mil_reais_m2, predicted = predito_antigos) # Soma dos quadrados dos residuos
+sse <- sse(actual = antigos$Mil_reais_m2, predicted = predito_antigos) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
 ```
 #### MAPE: `r format(round(mape, 4), nsmall = 4)`%
 #### SSE: `r format(round(sse, 4), nsmall = 4)`
