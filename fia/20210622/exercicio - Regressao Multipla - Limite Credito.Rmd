@@ -41,22 +41,26 @@ ggpairs(dados_lim_cred, title="Correlograma", columns = c("Idade", "RendimentoTo
 ```
 
 ### b) Calcule o coeficiente de correlação entre as variáveis quantitativas. Interprete os coeficientes.
-**Interpretação:**  Os coeficientes estão no item "a". As variáveis de Salário e e Rendimento TOtal possuem multicolinearidade entre si. Assim, adotou-se  avariável com a maior correlação que é salário.
+**Interpretação:**  Os coeficientes estão no item "a". As variáveis de Salário e e Rendimento TOtal possuem multicolinearidade entre si. Assim, adotou-se a variável com a maior correlação que é salário.
 
 ### c) Obtenha o modelo de regressão linear múltipla e faça a seleção de variáveis pelo método Backward
-```{r}
-regressao1 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Idade + Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
-summary(regressao1)
+```{r echo = F}
+#regressao1 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Idade + Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
+#summary(regressao1)
 
-regressao2 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
-summary(regressao2)
+#regressao2 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + LimitedeCreditoImediato + Escolaridade + Região + Gênero)
+#summary(regressao2)
 
-regressao3 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + Escolaridade + Região + Gênero)
-summary(regressao3)
+#regressao3 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + Escolaridade + Região + Gênero)
+#summary(regressao3)
 
 regressao4 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario + Região + Gênero)
 summary(regressao4)
+#summary(regressao4)$"adj.r.squared"
 
+#regressao5 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~  Salario + LimitedeCreditoImediato + Escolaridade )
+#summary(regressao5)
+#summary(regressao5)$"adj.r.squared"
 ```
 
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação
@@ -64,14 +68,12 @@ summary(regressao4)
 Salário, Região e Gênero, já que apresentaram uma melhor resposta ao limite de crédito, com explicação de 87,10%.
 
 ### e) Apresente a equação do modelo estimado
-y_estimado <- -2309.11531 + (0.46161 x salario) + (2395.81108 x regiao) + (3963.11176 x genero)
+y_estimado <- -2309.11531 + (0.46161 x salario) + (2395.81108 x regiao) + (3963.11176)
 
 ### f) Estime o valor do limite de cheque especial para um cliente que tem salário de R$4.850, de São Paulo e gênero masculino.
 ```{r}
 x.salario <- 4850
-x.regiao <- 1 # SP
-x.genero <- 1 # Masculino
-y_estimado <- -2309.11531 + (0.46161 * x.salario) + (2395.81108 * x.regiao) + (3963.11176 * x.genero)
+y_estimado <- -2309.11531 + (0.46161 * x.salario) + (2395.81108) + (3963.11176)
 
 ```
 O valor estimado do limite do cheque especial é R$ `r format(round(y_estimado, 2), nsmall = 2)`

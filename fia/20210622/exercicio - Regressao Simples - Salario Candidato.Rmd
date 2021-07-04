@@ -30,11 +30,10 @@ options(scipen=999)
 Um recrutador deseja estimar o salário de um candidato, a partir da nota média de várias provas realizadas durante o processo seletivo de admissão na empresa. O objetivo é ajudar os gestores a atribuir o salário do candidato dentro do intervalo já estipulado pela política de remuneração da empresa.
 
 
-```{r echo = F}
+```{r echo = T}
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 salario <- read_excel("doc/Regressão linear simples.xlsx",sheet="Salario" ) #Função que lê o arquivo xls e salva em uma base de dados R #Verificar variáveis
-# names(imobiliario)
-# summary(imobiliario)
+# summary(salario)
 ```
 
 ### Hipóteses para β1:
@@ -62,14 +61,14 @@ correlacao <- cor(salario$`Nota Média`, salario$`Salario Mensal`)
 ### c) Obtenha o modelo de regressão linear simples. Com 90% de confiança, há relação linear entre as variáveis?
 ```{r}
 regressao <- lm(data=salario, salario$`Salario Mensal` ~ salario$`Nota Média`)
-# summary(regressao)
+summary(regressao)
 ```
 #### O pvalor (0.0000000000344) < 0,10 indica que devemos rejeitar a hipótese nula, ou seja, aceitar que existe relação linear entre as variáveis.
 
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
 #### β1: Rejeita a hipótese Nula
 #### β0: Rejeita a hipótese Nula
-#### R2 é 0,7288: 72,88% dos salários dos candidatos são explicados pelas suas notas nos processos seletivos.
+#### R2 é 0,6029: 60,29% dos salários dos candidatos são explicados pelas suas notas nos processos seletivos.
 #### Se um determinado funcionário tiver hipoteticamente nota 0, seu salário será de R$ 2.788,88
 
 ### e) Apresente a equação do modelo estimada.

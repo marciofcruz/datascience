@@ -48,7 +48,6 @@ plot(rentabilidade$`Taxa de Desocupação`, rentabilidade$`Taxa de rentabilidade
 abline(lm(data=rentabilidade, rentabilidade$`Taxa de rentabilidade média` ~ rentabilidade$`Taxa de Desocupação`),  col='blue')
 correlacao <- cor(rentabilidade$`Taxa de Desocupação`, rentabilidade$`Taxa de rentabilidade média`)
 ```
-```
 
 **Interpretação:** Existe uma correlação fraca  e negativa (r = `r round(correlacao, 4)`).
 

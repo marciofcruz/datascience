@@ -23,9 +23,10 @@ options(scipen=999)
 
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 library(GGally)
-
+library(Metrics)
 
 dados_lim_cred  <- read_excel("doc/Regressão linear múltipla.xlsx",sheet="Limite_Credito (1)" ) 
+head(dados_lim_cred)
 ```
 
 ## Case 
@@ -50,14 +51,33 @@ summary(regressao2)
 
 regressao3 <- lm(data = dados_lim_cred, formula = LimitedoChequeEspecial ~ Salario)
 summary(regressao3)
-
-
-
 ```
 
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação
 **Interpretação:**  Feito a comparação entre as variáveis Idade, Salário e Limite de Crédito Imediato e, adotou-se o modelo que possui Salário e Limite de Crédito Imediato como variáveis resposta, já que possuem o maior R2 ajustado.
 
 ### e) Apresente a equação do modelo estimado
-y_estimado <- -2636.5649 + 0.57568 . x.salario + 1.01532 . x.limite_credito_imediato
+#### y_estimado <- -2636.5649 + 0.57568 . x.salario + 1.01532 . x.limite_credito_imediato
+
+## Análise de Erro
+### Gráficos para verificar Normalidade dos Resíduos
+```{r}
+residuo <- residuals(regressao2) # fornece os residuos do modelo
+
+# Graficos para verificar normalidade dos residuos
+par(mfrow = c(1,2))
+hist(residuo, col = "darkturquoise")
+qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo, col = "steelblue", lwd = 2)
+```
+
+### Quantificação do Modelo
+
+```{r}
+predito <- fitted.values(regressao2) # fornece os preditos do modelo
+mape <- mape(actual = dados_lim_cred$LimitedoChequeEspecial, predicted = predito) # Soma dos quadrados dos residuos
+sse <- sse(actual = dados_lim_cred$LimitedoChequeEspecial, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
+```
+#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
+#### SSE: `r format(round(sse, 4), nsmall = 4)`
 

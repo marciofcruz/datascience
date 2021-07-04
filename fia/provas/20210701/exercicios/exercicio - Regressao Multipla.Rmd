@@ -23,7 +23,6 @@ options(scipen=999)
 
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 library(GGally)
-library(Metrics)
 
 imobiliario <- read_excel("doc/Regressão linear múltipla.xlsx", sheet="Imobiliario")
 ```
@@ -51,7 +50,7 @@ summary(regressao.1)
 
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
 #### -0.041448 é a redução do preço do m2 para cada unidade de aumento da idade de imóvel, mantendo as outras variáveis zeradas.
-#### 5.739872 é o aumento do preço do m2 para cada unidade de aumento da distância ao metrô, mantendo as outras variáveis zeradas.
+#### 5.739872 é a redução do preço do m2 para cada unidade de aumento da distância ao metrô, mantendo as outras variáveis zeradas.
 #### 0.183508 é o aumento do preço do m2 para cada unidade de aumento da quantidade de comércios próximos, manteno as outras variáveis zeradas.
 #### 61,69% do preço do m2 é explicado pelas variáveis Idade do Imóvel, distância deste ao metrô e quantidade de comércios próximos.
 
@@ -62,32 +61,11 @@ y_estimado <- 16.493840 + (-0.04144 * idade) + (-5.739872 * distanciametro) + (0
 ```{r}
 idade <- 5
 distanciametro <- 1
-qtdecomercios <- 5
+qtdecomercios <- 0
 y_estimado <- (16.493840 + (-0.04144 * idade) + (-5.739872*distanciametro) + (0.183508*qtdecomercios)) 
 valor_estimado <- 85 * y_estimado * 1000
 ```
-#### O valor do imóvel é R$ `r format(round(valor_estimado, 2), nsmall = 2)`
+O valor do imóvel é R$ `r format(round(valor_estimado, 2), nsmall = 2)`
 
 
-## Análise de Erro
-### Gráficos para verificar Normalidade dos Resíduos
-```{r}
-residuo <- residuals(regressao.1) # fornece os residuos do modelo
 
-# Graficos para verificar normalidade dos residuos
-par(mfrow = c(1,2))
-hist(residuo, col = "darkturquoise")
-qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
-qqline(residuo, col = "steelblue", lwd = 2)
-```
-
-
-### Quantificação do Modelo
-
-```{r}
-predito <- fitted.values(regressao.1) # fornece os preditos do modelo
-mape <- mape(actual = imobiliario$Mil_reais_m2, predicted = predito) # Soma dos quadrados dos residuos
-sse <- sse(actual = imobiliario$Mil_reais_m2, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
-```
-#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
-#### SSE: `r format(round(sse, 4), nsmall = 4)`

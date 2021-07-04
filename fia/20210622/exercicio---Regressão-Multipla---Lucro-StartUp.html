@@ -188,68 +188,29 @@ pre code {
 </div>
 <div id="c-obtenha-o-modelo-de-regressão-linear-múltipla-considerando-um-nível-de-significância-de-10-para-seleção-de-variáveis." class="section level3">
 <h3>c) Obtenha o modelo de regressão linear múltipla, considerando um nível de significância de 10% para seleção de variáveis.</h3>
-<pre class="r"><code>regressao.1 &lt;- lm(data=startups, Lucro ~ Investimento_em_Mkt + Investimento_PeD)
+<pre class="r"><code>regressao.1 &lt;- lm(data=startups, Lucro ~ Investimento_em_Mkt + Investimento_PeD + Estado)
 summary(regressao.1)</code></pre>
 <pre><code>## 
 ## Call:
-## lm(formula = Lucro ~ Investimento_em_Mkt + Investimento_PeD, 
-##     data = startups)
+## lm(formula = Lucro ~ Investimento_em_Mkt + Investimento_PeD + 
+##     Estado, data = startups)
 ## 
 ## Residuals:
 ##    Min     1Q Median     3Q    Max 
-## -36103 -12202   1344  11251  37985 
+## -32780 -13314   2106  11045  36727 
 ## 
 ## Coefficients:
 ##                        Estimate  Std. Error t value         Pr(&gt;|t|)    
-## (Intercept)         47579.56259  5004.51225   9.507 0.00000000000159 ***
-## Investimento_em_Mkt     0.07094     0.02589   2.740          0.00866 ** 
-## Investimento_PeD        0.73571     0.07825   9.402 0.00000000000226 ***
+## (Intercept)         44524.26405  5717.61644   7.787 0.00000000061006 ***
+## Investimento_em_Mkt     0.06502     0.02639   2.464           0.0176 *  
+## Investimento_PeD        0.74402     0.07845   9.484 0.00000000000213 ***
+## EstadoSão Paulo      5654.55403  5153.61407   1.097           0.2783    
 ## ---
 ## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
 ## 
-## Residual standard error: 16910 on 47 degrees of freedom
-## Multiple R-squared:  0.8312, Adjusted R-squared:  0.824 
-## F-statistic: 115.7 on 2 and 47 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<pre class="r"><code>regressao.2 &lt;- lm(data=startups, Lucro ~ Investimento_PeD )
-summary(regressao.2)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = Lucro ~ Investimento_PeD, data = startups)
-## 
-## Residuals:
-##    Min     1Q Median     3Q    Max 
-## -38157 -11270   -543  12771  46239 
-## 
-## Coefficients:
-##                     Estimate  Std. Error t value             Pr(&gt;|t|)    
-## (Intercept)      52838.71195  4925.09619   10.73   0.0000000000000241 ***
-## Investimento_PeD     0.87763     0.06251   14.04 &lt; 0.0000000000000002 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 18020 on 48 degrees of freedom
-## Multiple R-squared:  0.8042, Adjusted R-squared:  0.8001 
-## F-statistic: 197.1 on 1 and 48 DF,  p-value: &lt; 0.00000000000000022</code></pre>
-<pre class="r"><code>regressao.3 &lt;- lm(data=startups, Lucro ~ Investimento_em_Mkt )
-summary(regressao.3)</code></pre>
-<pre><code>## 
-## Call:
-## lm(formula = Lucro ~ Investimento_em_Mkt, data = startups)
-## 
-## Residuals:
-##    Min     1Q Median     3Q    Max 
-## -82964 -20578   3903  16164  86184 
-## 
-## Coefficients:
-##                        Estimate  Std. Error t value       Pr(&gt;|t|)    
-## (Intercept)         63506.28223  7908.82532    8.03 0.000000000199 ***
-## Investimento_em_Mkt     0.23206     0.03259    7.12 0.000000004821 ***
-## ---
-## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
-## 
-## Residual standard error: 28400 on 48 degrees of freedom
-## Multiple R-squared:  0.5136, Adjusted R-squared:  0.5035 
-## F-statistic: 50.69 on 1 and 48 DF,  p-value: 0.000000004821</code></pre>
+## Residual standard error: 16870 on 46 degrees of freedom
+## Multiple R-squared:  0.8355, Adjusted R-squared:  0.8247 
+## F-statistic: 77.86 on 3 and 46 DF,  p-value: &lt; 0.00000000000000022</code></pre>
 </div>
 <div id="d-interprete-os-parâmetros-do-modelo-e-o-coeficiente-de-determinação." class="section level3">
 <h3>d) Interprete os parâmetros do modelo e o coeficiente de determinação.</h3>
@@ -259,8 +220,8 @@ summary(regressao.3)</code></pre>
 <div id="é-o-aumento-do-lucro-correspondente-ao-aumento-de-1-unidade-no-investimento-em-pd-quando-o-investimento-em-mkt-é-0." class="section level4">
 <h4>0.73571 é o aumento do lucro correspondente ao aumento de 1 unidade no investimento em P&amp;D, quando o investimento em Mkt é 0.</h4>
 </div>
-<div id="do-aumento-do-lucoro-é-explicado-pelas-variáveis-de-investimento-em-mkt-e-pd-pela-regressão-linear-múltipla." class="section level4">
-<h4>82,4% do aumento do lucoro é explicado pelas variáveis de investimento em Mkt e P&amp;D pela Regressão Linear Múltipla.</h4>
+<div id="do-aumento-do-lucro-é-explicado-pelas-variáveis-de-investimento-em-mkt-e-pd." class="section level4">
+<h4>82,4% do aumento do lucro é explicado pelas variáveis de investimento em Mkt e P&amp;D.</h4>
 </div>
 </div>
 <div id="e-apresente-a-equação-do-modelo-estimado." class="section level3">

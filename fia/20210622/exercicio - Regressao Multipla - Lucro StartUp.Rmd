@@ -21,8 +21,11 @@ rm(list = ls())
 
 options(scipen=999)
 
+# install.packages("Metrics")
+
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 library(GGally)
+library(Metrics)
 
 
 startups  <- read_excel("doc/Regressão linear múltipla.xlsx",sheet="Startups" ) 
@@ -48,30 +51,56 @@ Analisando as 2 covariáveis de investimento, estas possuem correlação de 0,66
 regressao.1 <- lm(data=startups, Lucro ~ Investimento_em_Mkt + Investimento_PeD)
 summary(regressao.1)
 
-regressao.2 <- lm(data=startups, Lucro ~ Investimento_PeD )
-summary(regressao.2)
-
-regressao.3 <- lm(data=startups, Lucro ~ Investimento_em_Mkt )
-summary(regressao.3)
-
 ```
 ### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
 
 #### 0.07094 é o aumento do lucro correspondente ao aumento de 1 unidade no investimento em marketing, quando o investimento em P&D é 0.
 #### 0.73571 é o aumento do lucro correspondente ao aumento de 1 unidade no investimento em P&D, quando o investimento em Mkt é 0.
-#### 82,4% do aumento do lucoro é explicado pelas variáveis de investimento em Mkt e P&D pela Regressão Linear Múltipla.
+#### 82,40% do aumento do lucro é explicado pelas variáveis de investimento em Mkt e P&D.
 
 
 ### e) Apresente a equação do modelo estimado.
 y_estimado = 47579.56259 + 0.07094 x investimento_mkt + 0.73571 x investimento_ped
 
 ### f) Calcule o lucro projetado de uma startup de São Paulo que apresenta R$40.000 com gastos em P&D e R$100.000 com gastos em marketing
-```{r echo = T}
+```{r echo = F}
 investimento_ped <- 40000
 investimento_mkt <- 100000
 summary(lm(data = startups, formula =  Lucro ~ Investimento_em_Mkt + Investimento_PeD + Estado))
-
-y_estimado <- 44524.26405 + 0.06502*investimento_mkt + 0.74402*investimento_ped + 5654.55403*0
 ```
-O valor estimado é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+```{r}
+y_estimado <- 44524.26405 + 0.06502*investimento_mkt + 0.73571*investimento_ped + 5654.55403
+```
+#### O valor estimado é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+
+
+## Análise de Erro
+### Gráficos para verificar Normalidade dos Resíduos
+```{r}
+residuo <- residuals(regressao.1) # fornece os residuos do modelo
+
+# Graficos para verificar normalidade dos residuos
+par(mfrow = c(1,2))
+hist(residuo, col = "darkturquoise")
+qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo, col = "steelblue", lwd = 2)
+```
+
+```{r}
+# Grafico para verificar igualdade de variancias
+predito <- fitted.values(regressao.1) # fornece os preditos do modelo
+par(mfrow = c(1,1))
+plot(predito, residuo, main = 'Residuos x Valores ajustados', ylab = 'Residuos', col = "darkturquoise")
+
+```
+
+### Quantificação do Modelo
+
+```{r}
+mape <- mape(actual = startups$Lucro, predicted = predito) # Soma dos quadrados dos residuos
+sse <- sse(actual = startups$Lucro, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
+```
+#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
+#### SSE: `r format(round(sse, 4), nsmall = 4)`
+
 
