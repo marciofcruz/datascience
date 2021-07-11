@@ -1,0 +1,101 @@
+---
+title: "Cervejaria Consumo Mensal Cerveja"
+author: "Marcio Cruz"
+date: "29/06/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(GGally)
+library(Metrics)
+
+cerveja <- read_excel("doc/Regressão linear múltipla.xlsx", sheet="Cerveja")
+```
+## Case 
+Uma cervejaria deseja iniciar comercialização de uma das marcas de sua cerveja premium em uma cidade no interior de São Paulo. Para isso, ela deseja projetar qual será o consumo mensal de cerveja (em litros) nesta cidade, com base em características de outras cidades do Estado. Cada linha da base de dados representa uma cidade.
+
+## Respostas
+### a) Calcule o coeficiente de correlação entre as variáveis quantitativas do banco de dados. Interprete os coeficientes.
+```{r echo = F}
+ggpairs(cerveja, title="Correlograma entre variáveis quantitativas") 
+```
+
+**Interpretação:**De acordo com os valores o consumo mensal de cerveja são explicados pelas variáveis da população e renda média.
+
+### b) Realize a análise bidimensional entre as covariáveis existentes e investigue possíveis problemas de multicolinearidade.
+Não há problemas entre colinearidades. Inclusive as covariantes mais imporantes, que são a População e a Renda Média possui uma correlação baixa entre si.
+
+### c) Obtenha o modelo de regressão linear múltipla, considerando um nível de significância de 10% para seleção de variáveis.
+```{r echo = F}
+regressao.2 <- lm(data=cerveja, cerveja$Consumo_de_cerveja ~ cerveja$Precipitacao + cerveja$População + cerveja$Renda_Media)
+summary(regressao.2)
+
+# regressao.3 <- lm(data=cerveja, cerveja$Consumo_de_cerveja ~ cerveja$População + cerveja$Renda_Media)
+# summary(regressao.3)
+
+# regressao.4 <- lm(data=cerveja, cerveja$Consumo_de_cerveja ~ cerveja$Temperatura_Media + cerveja$População + cerveja$Renda_Media)
+# summary(regressao.4)
+
+```
+
+
+### d) Interprete os parâmetros do modelo e o coeficiente de determinação.
+
+#### 18.79914 é o aumento do consumo de cerveja para cada unidade de precipitação pluviométrica.
+#### 0.09058 é o aumento do consumo de cerveja para cada unidade a mais da população.
+#### 1.22135 é o aumento do consumo de cerveja para cada cada unidade de aumento da renda média.
+#### 65,75 % do modelo explica o consumo mensal de cerveja, onde estão as variáveis de Temperatura Média, Precipitação Pluviométrica, População e Renda Média.
+
+
+### e) Apresente a equação do modelo estimado.
+y_estimado <- 11171.37970  + (18.79914 * precipitacao) + (0.09058 * populacao) + (1.22135 * renda)
+
+### f) Projete o lucro da cidade que possui precipitação de 2, população de 5.000 habitantes e renda média de R$1500.
+```{r echo = F}
+precipitacao <- 2
+populacao <- 5000
+renda <- 1500
+
+y_estimado <- 11171.37970 +  (18.79914 * precipitacao) + (0.09058 * populacao) + (1.22135 * renda)
+```
+#### O lucro na cidade é R$ `r format(round(y_estimado, 2), nsmall = 2)`
+
+## Análise de Erro
+### Gráficos para verificar Normalidade dos Resíduos
+```{r}
+residuo <- residuals(regressao.2) # fornece os residuos do modelo
+
+# Graficos para verificar normalidade dos residuos
+par(mfrow = c(1,2))
+hist(residuo, col = "darkturquoise")
+qqnorm(residuo, pch = 1, col = "darkturquoise", frame = FALSE)
+qqline(residuo, col = "steelblue", lwd = 2)
+```
+
+### Quantificação do Modelo
+
+```{r}
+predito <- fitted.values(regressao.2) # fornece os preditos do modelo
+plot(predito, residuo, main = 'Residuos x Valores ajustados', ylab = 'Residuos', col = "darkturquoise")
+
+mape <- mape(actual = cerveja$Consumo_de_cerveja, predicted = predito) # Soma dos quadrados dos residuos
+sse <- sse(actual = cerveja$Consumo_de_cerveja, predicted = predito) # Avalia a média absoluta dos resíudos, rem relação ao valor original da resposta y
+```
+#### MAPE: `r format(round(mape, 4), nsmall = 4)`%
+#### SSE: `r format(round(sse, 4), nsmall = 4)`

@@ -1,0 +1,186 @@
+---
+title: "Cancelamento Telecom"
+author: "Marcio Cruz"
+date: "08/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+```
+
+## Case
+Um diretor encarregado da tarefa de retenção de clientes de uma Telecom deseja criar um modelo para calcular a probabilidade de o cliente cancelar sua conta, a fim de realizar ações de retenção ativa.
+
+```{r echo = F}
+library(Metrics)
+library(knitr)
+
+ #install.packages("readxl") #Instalação do pacote. Uma vez instalado, não é necessário instalá-lo novamente no computador
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+
+telecom <- read_excel("base1/Cancelamento_Telecom.xlsx", sheet = "Base de Dados")
+# View(telecom)
+```
+
+## a) Faça a análise exploratória univariada e interprete todas as variáveis do banco de dados.
+```{r echo = F}
+summary(telecom[,-1])
+```
+#### Variável Sexo
+```{r echo = F}
+table(telecom$Sexo)
+prop.table(table(telecom$Sexo))
+```
+#### Variável Idade
+```{r echo = F}
+summary(telecom$Idade)
+```
+
+#### Variável Tempo Relacionamento
+```{r echo = F}
+summary(telecom$Tempo_relacionamento)
+```
+#### Variável Possui Internet
+```{r echo = F}
+table(telecom$Possui_internet)
+prop.table(table(telecom$Possui_internet))
+```
+#### Variável Cancelou
+```{r echo  = F}
+table(telecom$Cancelou)
+prop.table(table(telecom$Cancelou))
+```
+#### Variável Salário Anual
+```{r echo = F}
+summary(telecom$Salario_anual)
+```
+#### Variável Score Serasa
+```{r echo = F}
+summary(telecom$Score_serasa)
+```
+## b) Faça a análise bivariada das variáveis explicativas (covariáveis) vs. a variável resposta. Interprete os resultados.
+
+#### Variáveis quantitativas
+```{r echo = F}
+par(mfrow = c(1, 4))
+boxplot(telecom$Score_serasa ~telecom$Cancelou, col = "darkturquoise", main = "Score Serasa")
+boxplot(telecom$Idade ~telecom$Cancelou, col = "darkturquoise", main = "Idade")
+boxplot(telecom$Tempo_relacionamento ~telecom$Cancelou, col = "darkturquoise", main = "Tempo Relacionamento")
+boxplot(telecom$Salario_anual ~telecom$Cancelou, col = "darkturquoise", main = "Salário Anual")
+```
+
+#### Variáveis qualitativas
+```{r echo = F}
+round(prop.table(table(telecom$Sexo, telecom$Cancelou), 1), 3)
+round(prop.table(table(telecom$Possui_internet, telecom$Cancelou), 1), 3)
+```
+**Interpretação:** A análise gráfica indica que a idade é um fator importante para o cancelamento de contrato de Telecom pois, a média de idade de quem cancela é visivel menor do que mantém o contrato.
+
+
+## C) Obtenha o modelo de regressão logística utilizando 90% de confiança.
+#### Todas as variáveis
+```{r echo = F}
+modelo <- glm(Cancelou ~
+                Score_serasa +
+                Sexo +
+                Idade +
+                Tempo_relacionamento +
+                Possui_internet +
+                Salario_anual, 
+              family = binomial(link = 'logit'), data = telecom)
+summary(modelo)
+
+```
+#### Retirar Possui Internet
+```{r echo = F}
+modelo <- glm(Cancelou ~
+                Score_serasa +
+                Sexo +
+                Idade +
+                Tempo_relacionamento +
+                Salario_anual, 
+              family = binomial(link = 'logit'), data = telecom)
+summary(modelo)
+
+```
+#### Retirar Tempo Relacionamento
+```{r echo = F}
+modelo <- glm(Cancelou ~
+                Score_serasa +
+                Sexo +
+                Idade +
+                Salario_anual, 
+              family = binomial(link = 'logit'), data = telecom)
+summary(modelo)
+```
+#### Retirar Salário Atual
+```{r echo = F}
+modelo <- glm(Cancelou ~
+                Score_serasa +
+                Sexo +
+                Idade, 
+              family = binomial(link = 'logit'), data = telecom)
+summary(modelo)
+
+```
+### d) Obtenha a probabilidade estimada.
+```{r }
+telecom$probabilidade = predict(modelo, telecom, type = "response")
+head(telecom)
+```
+### e) Obtenha a tabela de classificacao utilizando o ponto de corte de 0,2. Qual o percentual de classificacao correta? E a sensibilidade e especificidade?
+
+#### Aplicar a predição
+```{r}
+telecom$predito <- as.factor(ifelse(telecom$probabilidade > 0.2, 1, 0))
+kable(head(telecom), caption="Head tabela")
+```
+
+#### Tabela de Classificação (matriz de confusão)
+```{r echo = F}
+mc.tabela <- table(telecom$Cancelou, telecom$predito)
+kable(mc.tabela, caption="Resposta Observada x Resposta Predita")
+
+
+mc.vn <- mc.tabela[1,1]
+mc.vp <- mc.tabela[2,2]
+mc.fn <- mc.tabela[2,1]
+mc.fp <- mc.tabela[1,2]
+
+mc.acuracia <- (mc.vp + mc.vn)/ (mc.vp + mc.vn + mc.fn + mc.fp)
+mc.sensibilidade <- mc.vp / (mc.vp + mc.fn)
+mc.especificidade <- mc.vn / (mc.vn + mc.fp)
+```
+
+
+#### Diagonais:
+##### Diagonal Principal:`r format(round(mc.vn + mc.vp, 4), nsmall = 4)`  
+##### Diagonal Secundária:`r format(round(mc.fp + mc.fn, 4), nsmall = 4)`  
+##### Proporção: `r format(round((mc.vn + mc.vp) / (mc.fp + mc.fn), 4), nsmall = 4)`
+
+
+#### Índices:
+##### Acurácia (vp+vn / vp+vn+fp+fn):  `r format(round(mc.acuracia, 4), nsmall = 4)`
+##### Sensibilidade (vp/vp+fn):  `r format(round(mc.sensibilidade, 4), nsmall = 4)`
+##### Especificidade (vn/vn+fp):  `r format(round(mc.especificidade, 4), nsmall = 4)`
+
+### Interpretação sobre o modelo
+#### Apresenta bom ajuste, já que há concentração dos casos na diagonal principal, confirmado pela acurácia de: `r format(round(mc.acuracia*100, 2), nsmall = 2)`%
+#### Sendo que o objetivo do modelo é descobrir quem cancelou, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`%.
+#### O resultado do índice de sensibilidade demonstra um valor satisfatório.

@@ -1,0 +1,114 @@
+---
+title: "Avaliação Risco de Empréstimo Bancário"
+author: "Marcio Cruz"
+date: "10/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(Metrics)
+library(knitr)
+library(moments)
+library(pander)
+library(dplyr)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+
+```
+
+```{r echo = F}
+calcula_discrepantes <- function(empbanc)  {
+  vars <- names(empbanc)[1:7]
+  df <- data.frame(variavel = NULL, li = NULL, ls = NULL, missing = NULL, outlier = NULL) 
+  
+  for(i in vars) {
+    auxiliar <- empbanc[,i]
+    colnames(auxiliar)[1] <- "valor"
+    
+    aeq.q1 <- quantile(auxiliar$valor, 0.25)
+    aeq.q3 <- quantile(auxiliar$valor, 0.75)
+    aeq.iiq <- aeq.q3- aeq.q1
+    aeq.li <- aeq.q1 - 1.5 * aeq.iiq
+    aeq.ls <- aeq.q3 + 1.5 * aeq.iiq
+    aeq.media <- mean(auxiliar$valor)
+    aeq.mediana <- median(auxiliar$valor)
+    aeq.coeficiente_assimetria <- skewness(auxiliar$valor)
+    aeq.qtde_discrepantes <- length(auxiliar$valor[auxiliar$valor < aeq.li | auxiliar$valor > aeq.ls])
+    aeq.missing <- dim(empbanc[is.na(i),])[1]
+    
+    linha <- data.frame(variavel = i, li = aeq.li, ls = aeq.ls, missing = aeq.missing, outlier = aeq.qtde_discrepantes)
+    df <- rbind(df, linha)
+  }
+  
+  return(df)
+}
+```
+
+
+## Case
+Considere dados históricos provenientes de um banco de varejo, referentes a 5.000 propostas de crédito geradas durante solicitações de empréstimo. A base traz informações como idade, nível de instrução, tempo de experiência, tempo no endereço e renda; além da variável resposta “classif” (0=bom pagador, 1=mau pagador). Deseja-se avaliar o potencial dessas variáveis para predizer se um cliente será um bom ou mau pagador.
+
+```{r echo = F}
+
+empbanc <- read_excel("base1/Emprestimo_Bancario.xlsx", sheet = "Base de Dados")
+```
+
+## a) Faça a análise exploratória univariada e interprete todas as variáveis do banco de dados.
+```{r echo = F}
+summary(empbanc)
+vars <- names(empbanc)[1:7]
+
+par(mfrow = c(2, 4))
+for(i in vars) {
+  auxiliar <- empbanc[,i]
+  boxplot(auxiliar, main=paste0("", i), col="orange")
+}
+
+
+```
+
+Todas as variáveis são quantitativas contínuas e, analisando graficamente apenas a idade não apresenta outlier. Podemos observar também que valores monetários possuem uma amplitude muito alta, que indica fortemente que a outlieres a maior destes números.
+
+
+## b) Há algum outlier que mereça atenção? E com relação a dados faltantes?
+
+### Primeira Análise
+```{r echo = F}
+df <- calcula_discrepantes(empbanc)
+kable(df, caption="Análise Inicial do Banco")
+
+# dim(teste <- empbanc[empbanc$renda > 100.0625,])[1]
+```
+#### Missing: 
+Nenhuma variável nesta situação
+
+#### Visão sobre os Outlier:
+##### Experiêcia e Tempo endereço: possuem valores discrepantes do ponto de vista estatístico mas, analisando o boxplot e os valores descritivos, concluo que são normais do ponto de vista de negócio.
+##### Variáveis explicativas monetárias: Todas apresentam outlier mas, começaremos a análise uma a uma e, refazendo os passos.
+
+
+#### Outlier de Renda:
+Na análise inicial, identificou-se que há 392 registros que possuem renda anual em salário mínimos discrepantes.
+
+
+
+### Outros outliers:
+Estatisticamente ainda observamos outliers no quadro abaixo, porém, parecem ser valores
+
+

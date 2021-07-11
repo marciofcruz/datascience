@@ -54,22 +54,29 @@ library(dplyr)
 library(readxl)
 dados <- readxl::read_excel("dados/Exercícios.xlsx", sheet = "Prova")
 
+summary(dados$`AVALIACAO(A)`)
+
 ```
 
 ```{r dados, echo=FALSE}
-idade.media <- mean(dados$Idade, na.rm = T)  
+# idade.media <- mean(dados$Idade, na.rm = T)  
 ```
 ### a) Qual a idade média dos clientes presentes no banco de dados?
-Resp: A idade média dos clientes é de `r round(idade.media,2)` anos.
+# Resp: A idade média dos clientes é de `r round(idade.media,2)` anos.
 
 ### b) Qual o valor do mínimo, máximo, mediana, Q1 e Q3 da variável idade? Interprete os valores 
 ```{r echo=F}
-idade.min <- min(dados$Idade)
-idade.max <- max(dados$Idade)
-idade.mediana <- median(dados$Idade, na.rm = T)
-idade.q1 <- quantile(dados$Idade, 0.25)
-idade.q3 <- quantile(dados$Idade, 0.75)
+summary(dados$V)
+dados
+vendas.min <- min(dados$V)
+vendas.max <- max(dados$V)
+vendas.mediana <- median(dados$V, na.rm = T)
+vendas.q1 <- quantile(dados$V, 0.25)
+vendas.q3 <- quantile(dados$V, 0.75)
 meuhist(dados$Idade, "Idades")
+
+sd(dados$V)
+var(dados$V)
 ```
 
 **Valores:**
