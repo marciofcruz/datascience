@@ -360,7 +360,7 @@ plotROC(actuals=empbanc2$classif, predictedScores=empbanc2$probabilidade)
 
 
 
-### o) Aplicando o corte para minimizar a diferença entre especificidade e sensibilidade?
+### o) Aplicando o corte para minimizar a diferença entre especificidade e sensibilidade
 ```{r}
 empbanc2$predito <- as.factor(ifelse(empbanc2$probabilidade > 0.4902, 1, 0))
 
@@ -391,8 +391,8 @@ mc.especificidade <- mc.vn / (mc.vn + mc.fp)
 
 #### Interpretação sobre o modelo
 ##### Apresenta bom ajuste, já que há concentração dos casos na diagonal principal, confirmado pela acurácia de: `r format(round(mc.acuracia*100, 2), nsmall = 2)`%
-##### Sendo que o objetivo do modelo é descobrir quem seja um mau pagador, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`%. 633 classificados com mau pagadores, foram classificados incorretamente e, 476 classificados como mau pagadores, foram classificados corretamente.
-##### O resultado do índice de sensibilidade  demonstra um ajuste regular do modelo, cabe fazer novas análise com IVA por exemplo.
+##### Sendo que o objetivo do modelo é descobrir quem seja um mau pagador, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`%.475 maus pagadores foram classificados corretamente e, 237 bons pagadores foram classificados incorretamente.
+##### O resultado do índice de sensibilidade  demonstra um ajuste regular do modelo, já que é menor que 0.5.
 
 
 ### p) Interpretação Final

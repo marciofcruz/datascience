@@ -22,16 +22,28 @@ getwd()
 rm(list = ls())
 
 options(scipen=999)
+
+library(Metrics)
+# install.packages("MLmetrics")
+library(MLmetrics)
+library(knitr)
+#install.packages("InformationValue")
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+
+
 ```
 
 ## Case
 Um diretor encarregado da tarefa de retenção de clientes de uma Telecom deseja criar um modelo para calcular a probabilidade de o cliente cancelar sua conta, a fim de realizar ações de retenção ativa.
 
 ```{r echo = F}
-library(Metrics)
-library(knitr)
-
- #install.packages("readxl") #Instalação do pacote. Uma vez instalado, não é necessário instalá-lo novamente no computador
 library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
 
 telecom <- read_excel("base1/Cancelamento_Telecom.xlsx", sheet = "Base de Dados")
@@ -180,7 +192,94 @@ mc.especificidade <- mc.vn / (mc.vn + mc.fp)
 ##### Sensibilidade (vp/vp+fn):  `r format(round(mc.sensibilidade, 4), nsmall = 4)`
 ##### Especificidade (vn/vn+fp):  `r format(round(mc.especificidade, 4), nsmall = 4)`
 
-### Interpretação sobre o modelo
-#### Apresenta bom ajuste, já que há concentração dos casos na diagonal principal, confirmado pela acurácia de: `r format(round(mc.acuracia*100, 2), nsmall = 2)`%
-#### Sendo que o objetivo do modelo é descobrir quem cancelou, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`%.
-#### O resultado do índice de sensibilidade demonstra um valor satisfatório.
+#### Interpretação sobre o modelo
+##### Apresenta bom ajuste, já que há concentração dos casos na diagonal principal, confirmado pela acurácia de: `r format(round(mc.acuracia*100, 2), nsmall = 2)`%
+##### Sendo que o objetivo do modelo é descobrir quem cancelou, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`%.
+##### O resultado do índice de sensibilidade demonstra um valor satisfatório.
+
+### f) Aplicar IV nas variáveis
+```{r echo = F}
+telecom2 <- telecom[, c("Sexo", "Idade",  "Tempo_relacionamento", "Possui_internet", "Salario_anual",  "Score_serasa", "Cancelou")]
+
+iv <- create_infotables(data = telecom2, y = "Cancelou")
+kable(iv$Summary, caption = "IV")
+
+modelo <- glm(Cancelou ~
+                Score_serasa +
+                Sexo +
+                Idade, 
+              family = binomial(link = 'logit'), data = telecom2)
+#Probabilidade estimada
+telecom2$probabilidade = predict(modelo, telecom2, type = "response")
+```
+
+### g) VIF
+```{r}
+modelo.vif <- vif(modelo)
+kable(modelo.vif)
+```
+
+### h) Ponto de Corte com maximização da Acurácia
+```{r echo  = F}
+ponto <- cutpointr(telecom2, probabilidade, Cancelou, method = maximize_metric, metric = accuracy)
+# summary(ponto) 
+```
+
+O ponto de corte otimizado é `r format(round(ponto$optimal_cutpoint, 4), nsmall = 4)`
+
+### i) Ponto de Corte com minimização da diferença entre especificidade e sensibilidade
+```{r}
+ponto <- cutpointr(telecom2, probabilidade, Cancelou,
+                   method = minimize_metric, metric = abs_d_sens_spec)
+#summary(ponto) 
+```
+O ponto de corte otimizado é `r format(round(ponto$optimal_cutpoint, 4), nsmall = 4)`
+
+
+### j) KS (Kolmogorov-Smirnov estatística)
+```{r}
+ks_stat(actuals = telecom2$Cancelou, predictedScores = telecom2$probabilidade)
+```
+
+### k) ROC
+```{r echo = F}
+plotROC(actuals=telecom2$Cancelou, predictedScores=telecom2$probabilidade)
+```
+
+### l) Aplicando o corte para minimizar a diferença entre especificidade e sensibilidade
+```{r echo = F}
+telecom2$predito <- as.factor(ifelse(telecom2$probabilidade > 0.1967, 1, 0))
+
+mc.tabela <- table(telecom2$Cancelou, telecom2$predito)
+kable(mc.tabela, caption="Resposta Observada x Resposta Predita")
+
+mc.vn <- mc.tabela[1,1]
+mc.vp <- mc.tabela[2,2]
+mc.fn <- mc.tabela[2,1]
+mc.fp <- mc.tabela[1,2]
+
+mc.acuracia <- (mc.vp + mc.vn)/ (mc.vp + mc.vn + mc.fn + mc.fp)
+mc.sensibilidade <- mc.vp / (mc.vp + mc.fn)
+mc.especificidade <- mc.vn / (mc.vn + mc.fp)
+
+```
+
+#### Diagonais:
+##### Diagonal Principal:`r format(round(mc.vn + mc.vp, 4), nsmall = 4)`  
+##### Diagonal Secundária:`r format(round(mc.fp + mc.fn, 4), nsmall = 4)`  
+##### Proporção: `r format(round((mc.vn + mc.vp) / (mc.fp + mc.fn), 4), nsmall = 4)`
+
+
+#### Índices:
+##### Acurácia (vp+vn / vp+vn+fp+fn):  `r format(round(mc.acuracia, 4), nsmall = 4)`
+##### Sensibilidade (vp/vp+fn):  `r format(round(mc.sensibilidade, 4), nsmall = 4)`
+##### Especificidade (vn/vn+fp):  `r format(round(mc.especificidade, 4), nsmall = 4)`
+
+#### Interpretação sobre o modelo
+##### Apresenta bom ajuste, já que há concentração dos casos na diagonal principal, confirmado pela acurácia de: `r format(round(mc.acuracia*100, 2), nsmall = 2)`%
+##### Sendo que o objetivo do modelo é descobrir quem seja um mau pagador, usaremos a referência do indicador de sensibilidade: `r format(round(mc.sensibilidade*100, 2), nsmall = 2)`1394 contratos cancelados foram classificados corretamente mas, 2510 contratos que não cancelaram foram indicados que haveria cancelamento.
+##### O resultado do índice de sensibilidade  demonstra um ajuste regular do modelo, cabe fazer novas análise com IVA por exemplo.
+
+### m) Interpretação Final
+Anteriormente havíamos conseguido um índice de 67,96%. Porém, agora com o apoio do IV e da minimização da diferença entre sensibilidade e especificidade, conseguimos um valor de 68,43% de capacidade de um modelo acertar se um determinado cliente vai cancelar o contrato.
+
