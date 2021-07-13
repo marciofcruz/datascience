@@ -1,0 +1,218 @@
+---
+title: "Fatores Influência no valor da Remuneração Mensal"
+author: "Marcio Cruz"
+date: "13/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(Metrics)
+# install.packages("MLmetrics")
+library(MLmetrics)
+library(knitr)
+#install.packages("InformationValue")
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+
+```
+
+```{r echo = F}
+
+calcula_correlacao <- function(df_dados, variaveis, corte) {
+  df <- data.frame(variavel1 = NULL, variavel2 = NULL, correlacao = NULL)
+  
+  for (var1 in variaveis) {
+    for (var2 in variaveis) {
+      if (var1 != var2) {
+        correlacao_auxiliar <- cor(df_dados[,var1], df_dados[,var2])
+        correlacao_auxiliar <- correlacao_auxiliar[1]
+        
+        if (correlacao_auxiliar >= corte | correlacao_auxiliar <= (-1*corte)) {
+          
+          achou <- length(df$correlacao[df$variavel1 == var2 & df$variavel2 == var1]) > 0
+          
+          if (!achou) {
+            linha <- data.frame(variavel1 = var1, variavel2 = var2, correlacao = correlacao_auxiliar)
+            df <- rbind(df, linha)
+          }
+        }
+      }
+    }
+  }
+  
+  return(df)
+  
+}
+
+calcula_discrepantes <- function(empbanc)  {
+  vars <- names(empbanc)[1:7]
+  df <- data.frame(variavel = NULL, li = NULL, ls = NULL, missing = NULL, outlier_menor = NULL, outlier_maior = NULL) 
+  
+  for(i in vars) {
+    auxiliar <- empbanc[,i]
+    colnames(auxiliar)[1] <- "valor"
+    
+    aeq.q1 <- quantile(auxiliar$valor, 0.25)
+    aeq.q3 <- quantile(auxiliar$valor, 0.75)
+    aeq.iiq <- aeq.q3- aeq.q1
+    aeq.li <- aeq.q1 - 1.5 * aeq.iiq
+    aeq.ls <- aeq.q3 + 1.5 * aeq.iiq
+    aeq.media <- mean(auxiliar$valor)
+    aeq.mediana <- median(auxiliar$valor)
+    aeq.coeficiente_assimetria <- skewness(auxiliar$valor)
+    aeq.missing <- dim(empbanc[is.na(i),])[1]
+    
+    linha <- data.frame(variavel = i, 
+                        li = aeq.li, 
+                        ls = aeq.ls, 
+                        missing = aeq.missing, 
+                        outlier_menor = length(auxiliar$valor[auxiliar$valor < aeq.li]),
+                        outlier_maior = length(auxiliar$valor[auxiliar$valor > aeq.ls]))
+    df <- rbind(df, linha)
+  }
+  
+  return(df)
+}
+```
+
+## Case
+Considere os dados de 534 profissionais, seus salários e algumas informações sociodemográficas. A ideia é tentar entender os fatores que mais influenciam na possibilidade do profissional ganhar um salário superior a 10 s.m. (salários mínimos). A partir da análise dessa base de dados, vamos tentar entender alguns elementos em torno desse tema, com a seguinte base de dados
+
+```{r echo = F}
+salario <- read_excel("base1/Fatores_Impacto_Salario.xlsx", sheet = "Base de Dados")
+total.antes <-dim(salario)[1]
+
+```
+
+
+
+## a) Faça a análise exploratória univariada e interprete todas as variáveis do banco de dados.
+```{r echo = F}
+summary(salario)
+
+vars <- names(salario[, c("EDUCACAO","ANOS_EXPERIENCIA","SALARIO","IDADE")])
+
+par(mfrow = c(1, 4))
+for(i in vars) {
+  auxiliar <- salario[,i]
+  boxplot(auxiliar, main=paste0("", i), col="orange")
+}
+
+# Regiao Sul
+auxiliar <- cbind(table(salario$SUL), prop.table(table(salario$SUL))*100)
+colnames(auxiliar) <- c("Absoluto", "%") 
+rownames(auxiliar) <- c("Não", "Sim")
+kable(auxiliar, caption = "Trabalha na Região Sul")
+
+# Regiao Sexo
+auxiliar <- cbind(table(salario$SEXO), prop.table(table(salario$SEXO))*100)
+colnames(auxiliar) <- c("Absoluto", "%") 
+rownames(auxiliar) <- c("Masculino", "Feminino")
+kable(auxiliar, caption = "Sexo")
+
+# Casado
+auxiliar <- cbind(table(salario$FLAG_CASADO), prop.table(table(salario$FLAG_CASADO))*100)
+colnames(auxiliar) <- c("Absoluto", "%") 
+rownames(auxiliar) <- c("Não", "Sim")
+kable(auxiliar, caption = "Casado")
+```
+
+##### A variável quantitativa continua Anos de estudo (EDUCACAO), possui visivelmente muitos outliers a menor.
+##### As variáveis Ano de Experiência e Salário possuem visivelmente alguns outliers a maior.
+##### Somente 29% das pessoas trabalham na Regiào Sul de São Paulo
+##### O gênero é equivalente com númeo maior de homens
+##### A maioria é casado
+
+## b) Há algum outlier que mereça sua atenção? E com relação a dados faltantes? 
+```{r echo = F}
+df <- calcula_discrepantes(salario)
+kable(df, caption="Análise Inicial do Banco")
+
+# dim(teste <- empbanc[empbanc$renda > 100.0625,])[1]
+```
+
+#### Eliminado outlier  de Salário
+```{r echo = F}
+ls <- df$ls[df$variavel == "SALARIO"]
+# kable(salario[salario$SALARIO > ls,], caption = paste("Salários", "Qtde:", dim(salario[salario$SALARIO > ls,])[1]))
+
+discrepantes <- dim(salario[salario$SALARIO > ls,])[1]
+
+hist(salario$SALARIO)
+#salario <- salario[salario$SALARIO <= ls,]
+```
+
+O valor considerado de limite para considerar um valor de  `r format(round(ls, 2), nsmall = 2)` salários mínimos.
+Eliminado `r format(round(discrepantes, 0), nsmall = 0)` registros de salários discrepantes da análise.
+
+### c) Qual o % de pessoas na situação de interesse?
+```{r echo = F}
+salario$SAL_INTERESSE <- as.numeric(ifelse(salario$SALARIO >= 10 , 1, 0))
+
+# 10 Salarios
+auxiliar <- cbind(table(salario$SAL_INTERESSE), prop.table(table(salario$SAL_INTERESSE))*100)
+colnames(auxiliar) <- c("Absoluto", "%") 
+rownames(auxiliar) <- c("menor 10 salários", "maior ou igual a 10 salários")
+kable(auxiliar, caption = "Salários")
+```
+
+### d) Qual a correlação entre as variáveis presentes na base?
+```{r echo = F}
+kable(cor(salario[1:7]))
+
+correlacao_entre_variaveis <- calcula_correlacao(salario, names(salario)[1:7], 0.7)
+kable(correlacao_entre_variaveis, caption="Multicolinearidade")
+
+```
+
+### e) Quais são as variáveis que melhor explicam se o profissional ganha ou não mais de 10 s.m.? 
+```{r}
+salario2 <- salario[,]
+iv <- create_infotables(data = salario2, y = "SAL_INTERESSE")
+kable(iv$Summary, caption = "IV")
+
+modelo <- glm(SAL_INTERESSE ~
+                EDUCACAO +
+                SUL +
+                SEXO +
+                SALARIO + 
+                IDADE + 
+                FLAG_CASADO, 
+              family = binomial(link = 'logit'), data = salario2)
+summary(modelo)
+
+#Probabilidade estimada
+salario2$probabilidade = predict(modelo, salario2, type = "response")
+```
+
+
+### f) Ajuste um modelo logístico e avalie quais variáveis apareceram como significantes. Adote 10% de significância.
+```{r}
+ks_stat(actuals = salario2$SAL_INTERESSE, predictedScores = salario2$probabilidade)
+
+```
+
+
+
+
