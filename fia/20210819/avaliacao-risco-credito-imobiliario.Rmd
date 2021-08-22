@@ -1,0 +1,48 @@
+---
+title: "Modelagem de Avaliação de Risco para Crédito Imobiliário"
+author: "Marcio Cruz"
+date: "22/08/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+library(Metrics)
+library(MLmetrics)
+library(knitr)
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+library(expss)
+library(arules)
+library(smbinning)
+library(scorecard)
+
+```
+
+## Case
+A base CREDITO IMOBILIARIO.xlsx é compostas por dados de centenas de milhares de financiamentos imobiliários feitos por clientes americanos, trazendo informações sobre as propostas, como dados sócio-demográficos, perfil do financiamento e características do cliente. O objetivo principal em se trabalhar com essa base é desenhar um modelo de predição de inadimplência no pagamento das parcelas do crédito imobiliário. Avalie os seguintes itens:
+**Fonte:** Adaptado de https://www.kaggle.com/c/home-credit-default-risk/data
+
+

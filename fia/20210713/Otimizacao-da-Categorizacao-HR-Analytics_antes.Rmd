@@ -1,0 +1,137 @@
+---
+title: "Otimização da Categorização HR Analytics"
+author: "Marcio Cruz"
+date: "13/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+# install.packages("dgof")
+library(dgof)
+
+library(Metrics)
+# install.packages("MLmetrics")
+library(MLmetrics)
+library(knitr)
+#install.packages("InformationValue")
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+# install.packages("smbinning")
+library(smbinning)
+
+```
+
+## Case
+Na pasta "BASE_DADOS", estão disponíveis 14.999 registros de informações sobre funcionários de uma empresa. 
+Seja left o evento de interesse (1=sim, 0=não), que indica se o funcionário saiu ou não da empresa. Nosso interesse é, a partir das variáveis explicativas  a seguir, tentar explicar o evento “saída da empresa”:
+
+
+```{r echo = F}
+rh<-read_excel("base/OTIMIZACAO_CATEGORIAS_ HR_ANALYTICS.xlsx", sheet="BASE_DADOS")
+
+# Conversao da base para o formato dataframe 
+rh <- as.data.frame(rh)
+# class(rh)
+```
+### Otimização do Satisfaction Level
+```{r echo = F}
+#Conversao de variaveis para numericas
+rh$satisfaction_level<-as.numeric(rh$satisfaction_level)
+rh$last_evaluation<-as.numeric(rh$last_evaluation)
+
+#Calculo do IV das variaveis (sem otimizacao)
+IV_antes <- create_infotables(data = rh, y = "left", ncore = 2)
+IV_antes$Summary
+antes <- IV_antes$Summary[IV_antes$Summary$Variable == "satisfaction_level","IV"]
+
+# Categorizacao otima da variavel "satisfaction level"
+satlevel_optbin <- smbinning(df=rh,y="left",x="satisfaction_level",p=0.05) 
+satlevel_optbin$ivtable
+
+#Salvar a variavel categorizada na base
+rh <- smbinning.gen(rh, satlevel_optbin, chrname="satlevel_opt" )
+
+#Calcular novamente IV das variaveis da base
+IV_depois <- create_infotables(data = rh, y = "left", ncore = 2)
+# IV_depois$Summary
+depois <- IV_depois$Summary[IV_depois$Summary$Variable == "satlevel_opt","IV"]
+```
+
+##### IV Antes:  `r format(round(antes, 4), nsmall = 4)`
+##### IV Depois:  `r format(round(depois, 4), nsmall = 4)`
+##### Melhoria:  `r format(round(((depois-antes)/antes*100) , 4), nsmall = 4)`%
+
+### Otimização do Last Evaluation
+```{r echo = F}
+rh$average_montly_hours <-as.numeric(rh$average_montly_hours)
+
+summary(rh$average_montly_hours)
+
+IV_antes <- create_infotables(data = rh, y = "left", ncore = 2)
+# IV_antes$Summary
+antes <- IV_antes$Summary[IV_antes$Summary$Variable == "average_montly_hours", "IV"]
+
+# Categorizacao otima
+names(rh)
+satlevel_optbin <- smbinning(df=rh,y="left",x="average_montly_hours") 
+satlevel_optbin$ivtable
+
+rh <- smbinning.gen(rh, satlevel_optbin, chrname="average_montly_hours_opt" )
+
+#Calcular novamente IV das variaveis da base
+IV_depois <- create_infotables(data = rh, y = "left", ncore = 2)
+# IV_depois$Summary
+depois <- IV_depois$Summary[IV_depois$Summary$Variable == "average_montly_hours_opt","IV"]
+
+```
+
+##### IV Antes:  `r format(round(antes, 4), nsmall = 4)`
+##### IV Depois:  `r format(round(depois, 4), nsmall = 4)`
+##### Melhoria:  `r format(round(((depois-antes)/antes*100) , 4), nsmall = 4)`%
+
+### Modelo
+```{r}
+
+names(rh)
+
+modelo.comum <- glm(left  ~
+                  satisfaction_level +
+                average_montly_hours +
+                last_evaluation, 
+              family = binomial(link = 'logit'), data = rh)
+rh$probabilidade_comum = predict(modelo.comum, rh, type = "response")
+
+
+modelo.otimizado <- glm(left  ~
+                  satisfaction_level +
+                average_montly_hours_opt +
+                last_evaluation, 
+              family = binomial(link = 'logit'), data = rh)
+rh$probabilidade_otimizada = predict(modelo.otimizado, rh, type = "response")
+
+kable(rh, caption = "Resultado")
+```
+

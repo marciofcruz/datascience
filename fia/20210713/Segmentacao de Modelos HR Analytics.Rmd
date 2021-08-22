@@ -1,0 +1,184 @@
+---
+title: "Segmentação de modelos HR Analytics"
+author: "Marcio Cruz"
+date: "10/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+
+# inicialização -----------------------------------------------------------
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+
+# install.packages("dgof")
+library(dgof)
+
+library(Metrics)
+# install.packages("MLmetrics")
+library(MLmetrics)
+library(knitr)
+#install.packages("InformationValue")
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+
+```
+
+```{r echo = F}
+
+calcula_correlacao <- function(df_dados, variaveis, corte) {
+  df <- data.frame(variavel1 = NULL, variavel2 = NULL, correlacao = NULL)
+  
+  for (var1 in variaveis) {
+    for (var2 in variaveis) {
+      if (var1 != var2) {
+        correlacao_auxiliar <- cor(df_dados[,var1], df_dados[,var2])
+        correlacao_auxiliar <- correlacao_auxiliar[1]
+        
+        if (correlacao_auxiliar >= corte | correlacao_auxiliar <= (-1*corte)) {
+          
+          achou <- length(df$correlacao[df$variavel1 == var2 & df$variavel2 == var1]) > 0
+          
+          if (!achou) {
+            linha <- data.frame(variavel1 = var1, variavel2 = var2, correlacao = correlacao_auxiliar)
+            df <- rbind(df, linha)
+          }
+        }
+      }
+    }
+  }
+  
+  return(df)
+  
+}
+
+calcula_discrepantes <- function(empbanc)  {
+  vars <- names(empbanc)[1:7]
+  df <- data.frame(variavel = NULL, li = NULL, ls = NULL, missing = NULL, outlier_menor = NULL, outlier_maior = NULL) 
+  
+  for(i in vars) {
+    auxiliar <- empbanc[,i]
+    colnames(auxiliar)[1] <- "valor"
+    
+    aeq.q1 <- quantile(auxiliar$valor, 0.25)
+    aeq.q3 <- quantile(auxiliar$valor, 0.75)
+    aeq.iiq <- aeq.q3- aeq.q1
+    aeq.li <- aeq.q1 - 1.5 * aeq.iiq
+    aeq.ls <- aeq.q3 + 1.5 * aeq.iiq
+    aeq.media <- mean(auxiliar$valor)
+    aeq.mediana <- median(auxiliar$valor)
+    aeq.coeficiente_assimetria <- skewness(auxiliar$valor)
+    aeq.missing <- dim(empbanc[is.na(i),])[1]
+    
+    linha <- data.frame(variavel = i, 
+                        li = aeq.li, 
+                        ls = aeq.ls, 
+                        missing = aeq.missing, 
+                        outlier_menor = length(auxiliar$valor[auxiliar$valor < aeq.li]),
+                        outlier_maior = length(auxiliar$valor[auxiliar$valor > aeq.ls]))
+    df <- rbind(df, linha)
+  }
+  
+  return(df)
+}
+```
+
+## Case
+Na base SEGMENTACAO DE MODELOS_ HR_ANALYTICS.xlsx, estão disponíveis 14.999 registros de informações sobre funcionários de uma empresa. 
+Seja *left* o evento de interesse (1=sim, 0=não), que indica se o funcionário saiu ou não da empresa. Nosso interesse é, a partir das variáveis explicativas  a seguir, tentar explicar o evento “saída da empresa”:
+
+```{r echo = F}
+HR<-read_excel("base/SEGMENTACAO DE MODELOS_ HR_ANALYTICS.XLSX", sheet="BASE_DADOS")
+# str(HR)
+HR$satisfaction_level<-as.numeric(HR$satisfaction_level)
+HR$last_evaluation<-as.numeric(HR$last_evaluation)
+# str(HR)
+
+```
+
+### Modelo unico de churn
+```{r echo = F}
+modelo <- glm(left ~ ., family = binomial (link = 'logit'), data=HR[,2:11])
+
+# summary(modelo)
+
+HR_pred<-predict(modelo, HR, type="response")
+HR<-data.frame(HR, HR_pred)
+
+valor_padrao <- ks.test(HR$HR_pred[HR$left==0],
+        HR$HR_pred[HR$left==1])
+```
+#### **KS:** `r format(round(valor_padrao$statistic, 4), nsmall = 4)`%
+
+
+### Importacao da base, contendo a variavel de cluster
+```{r}
+HR_cluster<-read_excel("base/SEGMENTACAO DE MODELOS_ HR_ANALYTICS.XLSX", sheet="BASE_DADOS_CLUSTER")
+```
+
+### Separando as bases por cluster (1, 2 e 3)
+```{r}
+HR_cluster_I <- subset(HR_cluster, HR_cluster$cluster==1)
+HR_cluster_II <- subset(HR_cluster, HR_cluster$cluster==2)
+HR_cluster_III <- subset(HR_cluster, HR_cluster$cluster==3)
+```
+
+### Modelo cluster I
+```{r echo = F}
+modelo_cluster_I <- glm(left ~ ., family = binomial (link = 'logit'), data=HR_cluster_I[,2:11])
+HR_pred_cluster_I <- predict(modelo_cluster_I, HR_cluster_I, type="response")
+HR_cluster_I <- data.frame(HR_cluster_I,HR_pred_cluster_I )
+ks_cluster_I<-ks.test(HR_cluster_I$HR_pred_cluster_I[HR_cluster_I$left==0],
+                      HR_cluster_I$HR_pred_cluster_I[HR_cluster_I$left==1])
+
+```
+#### **KS:** `r format(round(ks_cluster_I$statistic, 4), nsmall = 4)`%
+
+### Modelo cluster II
+```{r echo = F}
+modelo_cluster_II <- glm(left ~ ., family = binomial (link = 'logit'), data=HR_cluster_II[,2:11])
+HR_pred_cluster_II <- predict(modelo_cluster_II, HR_cluster_II, type="response")
+HR_cluster_II <- data.frame(HR_cluster_II,HR_pred_cluster_II )
+ks_cluster_II <- ks.test(HR_cluster_II$HR_pred_cluster_II[HR_cluster_II$left==0],
+                        HR_cluster_II$HR_pred_cluster_II[HR_cluster_II$left==1])
+```
+#### **KS:** `r format(round(ks_cluster_II$statistic, 4), nsmall = 4)`%
+
+### Modelo Cluster III
+```{r echo = F}
+modelo_cluster_III <- glm(left ~ ., family = binomial (link = 'logit'), data=HR_cluster_III[,2:11])
+HR_pred_cluster_III <- predict(modelo_cluster_III, HR_cluster_III, type="response")
+HR_cluster_III <- data.frame(HR_cluster_III,HR_pred_cluster_III )
+ks_cluster_III <- ks.test(HR_cluster_III$HR_pred_cluster_III[HR_cluster_III$left==0],
+                        HR_cluster_III$HR_pred_cluster_III[HR_cluster_III$left==1])
+```
+#### KS: `r format(round(ks_cluster_III$statistic, 4), nsmall = 4)`%
+
+### K-S ponderado
+```{r}
+final <- round(((nrow(HR_cluster_I)*ks_cluster_I$statistic + 
+          nrow(HR_cluster_II)*ks_cluster_II$statistic +
+          nrow(HR_cluster_III)*ks_cluster_III$statistic)/nrow(HR_cluster)),4)
+```
+
+#### **KS:** `r format(round(final, 4), nsmall = 4)`%
+
+
