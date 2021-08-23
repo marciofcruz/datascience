@@ -169,12 +169,12 @@ kable(vif, caption = "VIF do Modelo Otimizado")
 
 ### ROC do Modelo Comum
 ```{r echo = F}
-plotROC(actuals=rh$left, predictedScores=rh$probabilidade_comum)
+plotROC(actuals=rh$left, predictedScores=rh$probabilidade_comum, Show.labels = T)
 ```
 
 ### ROC do Modelo Otimizado
 ```{r echo = F}
-plotROC(actuals=rh$left, predictedScores=rh$probabilidade_otimizada)
+plotROC(actuals=rh$left, predictedScores=rh$probabilidade_otimizada, Show.labels = T)
 ```
 
 

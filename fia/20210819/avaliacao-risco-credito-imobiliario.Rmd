@@ -61,16 +61,19 @@ A base CREDITO IMOBILIARIO.xlsx é compostas por dados de centenas de milhares d
 ```{r echo = F}
 imobiliario_ams <- read_excel("doc/CREDITO IMOBILIARIO - Amostra.xlsx", sheet="Amostra")
 
-colnames(imobiliario_ams) = c("ID Cliente", "Inadimplente", "Tipo Contrato", "Sexo", "Tem Carro",
-                              "Tem Casa", "Filhos", "Renda", "Volume Financiamento", "Valor Anual Parcelas", "Acompanhante Cliente",
-                              "Tipo Renda", "Estado Civil", "Tipo Residência",  "População Região", "Tem Celular", "Tem Tel Comercial",
-                              "Celular Sinal", "Tem Email", "Membros Familia", "Rating Região Moradia", "Dia Semana Proposta", "Hora Proposta", 
-                              "Endereço Contato Correto", "Endereço Trabalho Correto")
-
+colnames(imobiliario_ams) = c("ID_Cliente", "Inadimplente", "Tipo_Contrato", "Sexo", "Tem Carro",
+                              "Tem_Casa", "Filhos", "Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Acompanhante_Cliente",
+                              "Tipo_Renda", "Estado_Civil", "Tipo_Residencia",  "Populacao_Regiao", "Tem_Celular", "Tem_Tel_Comercial",
+                              "Celular_Sinal", "Tem_Email", "Membros_Familia", "Rating_Regiao_Moradia", "Dia_Semana_Proposta", "Hora_Proposta", 
+                              "Endereco_Contato_Correto", "Endereco_Trabalho_Correto")
 
 
 df_inadimplentes <- imobiliario_ams[imobiliario_ams$Inadimplente == 1,]
 df_adimplentes <- imobiliario_ams[imobiliario_ams$Inadimplente == 0,]
+
+imobiliario_ams$`ID_Cliente` <- NULL
+df_inadimplentes$`ID_Cliente` <- NULL
+df_adimplentes$`ID_Cliente` <- NULL
 
 ```
 
@@ -79,6 +82,18 @@ df_adimplentes <- imobiliario_ams[imobiliario_ams$Inadimplente == 0,]
 meuhist <- function(valores, caption_variavel, cor) {
   
 barplot(valores, main = caption_variavel, ylab = "Frequência")
+}
+
+meuboxplot <- function(valores, caption_variavel, ylab) {
+boxplot(valores,
+main = caption_variavel,
+xlab = caption_variavel,
+ylab = ylab,
+col = "pink",
+horizontal = T,
+varwidth = T,
+staplewex = T,
+border = "blue")
 }
   
 minha_distribuicao <- function(nome_variavel, inicio_caption_variavel, caption_variavel, cor) {
@@ -104,7 +119,7 @@ minha_distribuicao <- function(nome_variavel, inicio_caption_variavel, caption_v
 
 ## a) Faça a análise exploratória univariada e bivariada Qual o % de clientes inadimplentes na base?
 
-### % Clientes Inadimplentes x Adimplentes
+### a-1) % Clientes Inadimplentes x Adimplentes
 ```{r echo = F}
 tabela <- cbind(table(imobiliario_ams$Inadimplente), prop.table(table(imobiliario_ams$Inadimplente)))
 colnames(tabela) <- c("Quantidade", "%") 
@@ -112,25 +127,7 @@ rownames(tabela) <- c("Adimplente", "Inadimplente")
 kable(tabela)
 ```
 
-### Análise Univariada
-#### Sumário das variáveis quantitativas de Inadimplentes
-```{r echo = F}
-# 
-dfauxiliar <-subset(df_inadimplentes, select = c("Renda", "Volume Financiamento", "Valor Anual Parcelas", "População Região", "Membros Familia", "Filhos"))
-summary(dfauxiliar)
-```
-
-#### Sumário das variáveis quantitativas de Adimplentes
-```{r echo = F}
-# 
-dfauxiliar <-subset(df_adimplentes, select = c("Renda", "Volume Financiamento", "Valor Anual Parcelas", "População Região", "Membros Familia", "Filhos"))
-summary(dfauxiliar)
-```
-
-#### Conclusão: Não podemos tirar nenhuma conclusão observando as diferenças de valores de variáveis quantitativas entre inadimplentes e adimplentes, já que os valores são bem próximos.
-
-
-### Variáveis Qualitativas entre Inadimplentes e Inadimplentes
+### a-2) Variáveis Qualitativas entre Inadimplentes e Inadimplentes
 ```{r echo = F}
 char <- unlist(lapply(imobiliario_ams, is.character)) #seleciona as variaveis char
 #loop para tabela de todas as variaveis char
@@ -151,14 +148,216 @@ for (i in names) {
 ```
 
 
-#### Conclusão: Analisando graficamente através de histograma e gráfico de pizza, percebe-se a influência de algumas variáveis qualitativas, como segue:
-#### Tipo de Contrato
-#### Sexo
-#### Carro
-#### Tipo Renda
-#### Estado Civil
-#### Tipo Residência
-#### Dia da Semana que foi feita a proposta
+#### **Conclusão sobre variáveis qualitativas:** Analisando graficamente através de histograma e gráfico de pizza, percebe-se a influência de algumas variáveis qualitativas, como segue:
+* Tipo Residência
+* Tipo de Contrato
+* Sexo
+* Carro
+* Tipo Renda
+* Estado Civil
+* Dia da Semana que foi feita a proposta
+
+### a-3) Análise Univariada de Variáveis Quantitativas
+#### Sumário Inadimplentes
+```{r echo = F}
+# 
+dfauxiliar <-subset(df_inadimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos"))
+summary(dfauxiliar)
+```
+
+#### Sumário Adimplentes
+```{r echo = F}
+# 
+dfauxiliar <-subset(df_adimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos"))
+summary(dfauxiliar)
+```
+
+#### Análise Bivariada
+```{r echo = F}
+meuboxplot(imobiliario_ams$Renda ~ imobiliario_ams$Inadimplente, "Renda", "Inadimplente")
+meuboxplot(imobiliario_ams$`Volume_Financiamento` ~ imobiliario_ams$Inadimplente, "Volume_Financiamento", "Inadimplente")
+meuboxplot(imobiliario_ams$`Valor_Anual_Parcelas` ~ imobiliario_ams$Inadimplente, "Valor_Anual_Parcelas", "Inadimplente")
+meuboxplot(imobiliario_ams$`Populacao_Regiao` ~ imobiliario_ams$Inadimplente, "Populacao_Regiao", "Inadimplente")
+meuboxplot(imobiliario_ams$`Membros_Familia` ~ imobiliario_ams$Inadimplente, "Membros_Família", "Inadimplente")
+meuboxplot(imobiliario_ams$Filhos ~ imobiliario_ams$Inadimplente, "Filhos", "Inadimplente")
+
+```
+
+#### **Conclusão sobre variáveis quantitativas:** Não é possível gerar nenhum *insight* pois Os números entre inadimplentes e adimplentes são muito próximos.
+
+## b) Calculo o IV das variáveis
+```{r echo = F}
+IV <- create_infotables(data = imobiliario_ams, y = "Inadimplente")
+IV$Summary
+
+populacao_regiao.antes <-  IV$Summary[IV$Summary$Variable == "Populacao_Regiao","IV"]
+
+imobiliario_ams<-as.data.frame(imobiliario_ams)
+
+```
+
+### c) Categorização das variáveis quantitativas com melhores resultados
+
+#### c-1)  Volume Financiamento
+
+```{r echo = F}
+# Quartil
+imobiliario_ams$"Volume_Financiamento_Quartil" <- discretize(imobiliario_ams$`Volume_Financiamento`, method = "frequency", breaks = 4)
+
+#Otimizado
+smb_volume_financiamento <-smbinning(df = imobiliario_ams, y = "Inadimplente", x = "Volume_Financiamento", p = 0.05) 
+imobiliario_ams <-smbinning.gen(imobiliario_ams, smb_volume_financiamento, chrname = "Volume_Financiamento_Otimizado" )
+
+IV <- create_infotables(data = imobiliario_ams, y = "Inadimplente")
+volume_financiamento.antes <- IV$Summary[IV$Summary$Variable == "Volume_Financiamento","IV"]
+volume_financiamento.quartil <- IV$Summary[IV$Summary$Variable == "Volume_Financiamento_Quartil","IV"]
+volume_financiamento.otimizado <- IV$Summary[IV$Summary$Variable == "Volume_Financiamento_Otimizado","IV"]
+
+```
+
+* IV Normal (Melhor Resultado):  `r format(round(volume_financiamento.antes, 4), nsmall = 4)`
+* IV com Quartil:  `r format(round(volume_financiamento.quartil, 4), nsmall = 4)`
+* IV Otimizado:  `r format(round(volume_financiamento.otimizado, 4), nsmall = 4)`
 
 
+#### c-2)  População da Região
+
+```{r echo = F}
+# Quartil
+imobiliario_ams$"Populacao_Regiao_Quartil" <- discretize(imobiliario_ams$Populacao_Regiao, method = "frequency", breaks = 4)
+
+# Otimizado
+smb_populacao_regiao <-smbinning(df = imobiliario_ams, y = "Inadimplente", x = "Populacao_Regiao", p = 0.05) 
+smb_populacao_regiao$ivtable
+imobiliario_ams <-smbinning.gen(imobiliario_ams, smb_populacao_regiao, chrname = "Populacao_Regiao_Otimizado" )
+
+
+IV <- create_infotables(data = imobiliario_ams, y = "Inadimplente")
+populacao_regiao.antes  <- IV$Summary[IV$Summary$Variable == "Populacao_Regiao","IV"]
+populacao_regiao.quartil <- IV$Summary[IV$Summary$Variable == "Populacao_Regiao_Quartil","IV"]
+populacao_regiao.otimizado <- IV$Summary[IV$Summary$Variable == "Populacao_Regiao_Otimizado","IV"]
+```
+
+* IV Normal (Melhor Resultado):  `r format(round(populacao_regiao.antes, 4), nsmall = 4)`
+* IV com Quartil:  `r format(round(populacao_regiao.quartil, 4), nsmall = 4)`
+* IV Otimizado:  `r format(round(populacao_regiao.otimizado, 4), nsmall = 4)`
+
+
+
+#### c-2)  Valor Anual Parcelas
+
+```{r echo = F}
+# Quartil
+imobiliario_ams$"Valor_Anual_Parcelas_Quartil" <- discretize(imobiliario_ams$Valor_Anual_Parcelas, method = "frequency", breaks = 4)
+
+# Otimizado
+smb_valor_anual_parcelas <-smbinning(df = imobiliario_ams, y = "Inadimplente", x = "Valor_Anual_Parcelas", p = 0.05) 
+imobiliario_ams <-smbinning.gen(imobiliario_ams, smb_valor_anual_parcelas, chrname = "Valor_Anual_Parcelas_Otimizado" )
+
+IV <- create_infotables(data = imobiliario_ams, y = "Inadimplente")
+valor_anual_parcelas.antes  <- IV$Summary[IV$Summary$Variable == "Valor_Anual_Parcelas","IV"]
+valor_anual_parcelas.quartil <- IV$Summary[IV$Summary$Variable == "Valor_Anual_Parcelas_Quartil","IV"]
+valor_anual_parcelas.otimizado <- IV$Summary[IV$Summary$Variable == "Valor_Anual_Parcelas_Otimizado","IV"]
+
+IV$Summary
+```
+
+* IV Normal:  `r format(round(valor_anual_parcelas.antes, 4), nsmall = 4)`
+* IV com Quartil:  `r format(round(valor_anual_parcelas.quartil, 4), nsmall = 4)`
+* IV Otimizado (Melhor Resultado):  `r format(round(valor_anual_parcelas.otimizado, 4), nsmall = 4)`
+
+### d) Divida a base em treino e teste e obtenha o modelo de regressão logística utilizando o método ***Backward***, com 95% de confiança. Dado o número relativamente alto de variáveis, exclua as variáveis de IV fraquíssimo.
+```{r echo = F}
+set.seed(123)
+amostra <- sort(sample(nrow(imobiliario_ams), nrow(imobiliario_ams)*.7))
+treino <-imobiliario_ams[amostra,]
+teste <-imobiliario_ams[-amostra,]
+
+```
+
+```{r echo = F}
+modelo <- glm(Inadimplente ~ Tipo_Renda+
+                Rating_Regiao_Moradia+
+                Volume_Financiamento+
+                Sexo+
+                Valor_Anual_Parcelas+
+                Estado_Civil+
+                Tipo_Contrato,
+              family=binomial(link='logit'),
+              data=treino)
+summary(modelo) 
+
+```
+
+### e) Verifique se há multicolinearidade.
+```{r echo = F}
+
+vif <- vif(modelo)
+kable(vif, caption = "VIF")
+
+```
+
+### f) Calcule o K-S e o AUC para o modelo na base de treino e teste. Alguma disparidade entre os resultados desses indicadores? Como você avalia a qualidade desse modelo?
+
+
+#### f-1) Base Treino
+```{r echo = F}
+treino$probabilidade <- predict(modelo, treino, type = "response")
+valor_ks_treino <- ks_stat(actuals=treino$Inadimplente, predictedScores=treino$probabilidade)
+plotROC(actuals=treino$Inadimplente, predictedScores=treino$probabilidade, )
+```
+
+* K-S Treino:  `r format(round(valor_ks_treino, 4), nsmall = 4)`
+
+
+### f-2) Base Teste
+```{r echo = F}
+teste$probabilidade <- predict(modelo, teste, type = "response")
+valor_ks_teste <- ks_stat(actuals=teste$Inadimplente, predictedScores=teste$probabilidade)
+plotROC(actuals=teste$Inadimplente, predictedScores=teste$probabilidade)
+```
+
+* K-S Teste: `r format(round(valor_ks_teste, 4), nsmall = 4)`
+
+### g) Mostre a tabela de distribuição do score, por decis. Qual o % de inadimplência por faixa? O score ordena o risco dos clientes de forma adequada?
+```{r echo = F}
+treino$probb_faixas <-
+  discretize(treino$probabilidade, method="frequency", 
+             breaks=10)
+
+cro_rpct(treino$probb_faixas, treino$Inadimplente)
+
+```
+
+### h) PSI OOT
+```{r echo = F}
+oot <- read_excel("doc/CREDITO IMOBILIARIO - Amostra.xlsx", sheet="BASE DADOS_OOT")
+
+colnames(oot) = c("ID_Cliente", "Inadimplente", "Tipo_Contrato", "Sexo", "Tem Carro",
+                              "Tem_Casa", "Filhos", "Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Acompanhante_Cliente",
+                              "Tipo_Renda", "Estado_Civil", "Tipo_Residencia",  "Populacao_Regiao", "Tem_Celular", "Tem_Tel_Comercial",
+                              "Celular_Sinal", "Tem_Email", "Membros_Familia", "Rating_Regiao_Moradia", "Dia_Semana_Proposta", "Hora_Proposta", 
+                              "Endereco_Contato_Correto", "Endereco_Trabalho_Correto")
+
+
+oot$`ID_Cliente` <- NULL
+
+
+#table(treino$Volume_Financiamento)
+oot$Valor_Financiamento_Otimizado <- ifelse(oot$Volume_Financiamento <= 1086786 , '01 <= 1086786',
+                               '02 > 1086786')
+
+
+#table(treino$Populacao_Regiao)  
+oot$Populacao_Regiao_Otimizado <- ifelse(oot$Populacao_Regiao <= 0.0314 , '01 <= 0.0314',
+                                              ifelse(oot$Populacao_Regiao <= 0.0358, '02 <= 0.0358',
+                                              '03 > 0.0358'))
+
+oot$probabilidade = predict(modelo, oot, type = "response")
+
+#PSI
+perf_psi(score = list(treino = treino$probabilidade, oot = oot$probabilidade))
+
+
+```
 
