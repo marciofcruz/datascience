@@ -161,14 +161,14 @@ for (i in names) {
 #### Sumário Inadimplentes
 ```{r echo = F}
 # 
-dfauxiliar <-subset(df_inadimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos"))
+dfauxiliar <-subset(df_inadimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos", "Rating_Regiao_Moradia"))
 summary(dfauxiliar)
 ```
 
 #### Sumário Adimplentes
 ```{r echo = F}
 # 
-dfauxiliar <-subset(df_adimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos"))
+dfauxiliar <-subset(df_adimplentes, select = c("Renda", "Volume_Financiamento", "Valor_Anual_Parcelas", "Populacao_Regiao", "Membros_Familia", "Filhos", "Rating_Regiao_Moradia"))
 summary(dfauxiliar)
 ```
 
@@ -249,6 +249,8 @@ populacao_regiao.otimizado <- IV$Summary[IV$Summary$Variable == "Populacao_Regia
 ```{r echo = F}
 # Quartil
 imobiliario_ams$"Valor_Anual_Parcelas_Quartil" <- discretize(imobiliario_ams$Valor_Anual_Parcelas, method = "frequency", breaks = 4)
+imobiliario_ams <- as.data.frame(imobiliario_ams)
+class(imobiliario_ams)
 
 # Otimizado
 smb_valor_anual_parcelas <-smbinning(df = imobiliario_ams, y = "Inadimplente", x = "Valor_Anual_Parcelas", p = 0.05) 
@@ -276,11 +278,10 @@ teste <-imobiliario_ams[-amostra,]
 ```
 
 ```{r echo = F}
-modelo <- glm(Inadimplente ~ Tipo_Renda+
+modelo <- glm(Inadimplente ~ 
                 Rating_Regiao_Moradia+
                 Volume_Financiamento+
                 Sexo+
-                Valor_Anual_Parcelas+
                 Estado_Civil+
                 Tipo_Contrato,
               family=binomial(link='logit'),
@@ -349,14 +350,14 @@ oot$Valor_Financiamento_Otimizado <- ifelse(oot$Volume_Financiamento <= 1086786 
 
 
 #table(treino$Populacao_Regiao)  
-oot$Populacao_Regiao_Otimizado <- ifelse(oot$Populacao_Regiao <= 0.0314 , '01 <= 0.0314',
-                                              ifelse(oot$Populacao_Regiao <= 0.0358, '02 <= 0.0358',
-                                              '03 > 0.0358'))
+#oot$Populacao_Regiao_Otimizado <- ifelse(oot$Populacao_Regiao <= 0.0314 , '01 <= 0.0314',
+ #                                             ifelse(oot$Populacao_Regiao <= 0.0358, '02 <= 0.0358',
+  #                                            '03 > 0.0358'))
 
-oot$probabilidade = predict(modelo, oot, type = "response")
+# oot$probabilidade = predict(modelo, oot, type = "response")
 
 #PSI
-perf_psi(score = list(treino = treino$probabilidade, oot = oot$probabilidade))
+# perf_psi(score = list(treino = treino$probabilidade, oot = oot$probabilidade))
 
 
 ```
