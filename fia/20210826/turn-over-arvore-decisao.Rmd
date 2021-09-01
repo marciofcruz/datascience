@@ -1,0 +1,151 @@
+---
+title: "Turn Over - Árvore de decisão"
+author: "Marcio Cruz"
+date: "31/08/2021"
+output: html_document
+---
+
+<style type="text/css">
+.main-container {
+  max-width: 1800px;
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(fig.width=20, fig.height=10, fig.align = "center") 
+
+wd <- Sys.getenv("RWD")
+
+if (!file.exists(wd)) {
+  stop(paste("O diretorio definido na variavel de ambiente RWD nao foi encontrado",wd, sep="="))
+} 
+
+setwd(wd)
+getwd()
+
+rm(list = ls())
+
+options(scipen=999)
+options(width = 1024)
+
+library(Metrics)
+library(MLmetrics)
+library("stringi")
+library(knitr)
+library(InformationValue)
+library(moments)
+library(pander)
+library(dplyr)
+library(cutpointr)
+library(Information)
+library(readxl) #Avisar o R que utilizará este pacote. Deve-se avisar toda vez que abrir o R
+library(HH)
+library(expss)
+library(arules)
+library(smbinning)
+library(scorecard)
+library(ggplot2)
+library(ggpubr)
+library(readxl)
+library(caret)
+library(e1071)
+
+library("gtools")
+library("partykit")
+library("CHAID")
+
+
+theme_set(theme_pubr())
+```
+
+# Case
+Uma área de gestão de pessoas deseja obter o perfil e prever os funcionários que irão sair da empresa.
+
+```{r echo = F}
+
+turnover <- read_excel("doc/Turnover.xlsx", sheet = 'Base de Dados')
+nrow(turnover)
+ncol(turnover)
+
+# Transformar variaveis em fator
+
+turnover[sapply(turnover, is.character)] <- lapply(turnover[sapply(turnover, is.character)], as.factor)
+turnover$saiu <- as.factor(turnover$saiu)
+turnover$acidente_trabalho <- as.factor(turnover$acidente_trabalho)
+turnover$promocao_ultimos_5_anos <- as.factor(turnover$promocao_ultimos_5_anos)
+
+```
+
+## a) Faça a análise exploratória de cada variável, individualmente.
+```{r echo = F}
+summary(turnover$satisfacao)
+summary(turnover$horas_trabalhadas_media_mes)
+
+cro(turnover$acidente_trabalho)
+cro(turnover$promocao_ultimos_5_anos)
+cro(turnover$departamento)
+cro(turnover$salario)
+cro(turnover$saiu)
+
+```
+
+## b) Faca a analise bidimensional de cada variavel explicativa versus a variavel resposta.
+```{r echo = F}
+# X2 <- chisq.test(turnover$saiu,turnover$satisfacao_cat)
+# X2$observed
+# X2$expected
+
+
+turnover$satisfacao_cat <- quantcut(turnover$satisfacao,4)
+turnover$horas_cat <- quantcut(turnover$horas_trabalhadas_media_mes,4)
+
+kable(round(prop.table(table(turnover$acidente_trabalho, turnover$saiu), 1), 3), caption = "Acidente Trabalho x Saiu")
+cro_rpct(turnover$acidente_trabalho, turnover$saiu)
+
+kable(round(prop.table(table(turnover$promocao_ultimos_5_anos, turnover$saiu), 1), 3), caption = "Promoção Último 5 anos x Saiu")
+kable(round(prop.table(table(turnover$satisfacao_cat, turnover$saiu), 1), 3), caption = "Satisfação x Saiu")
+kable(round(prop.table(table(turnover$horas_cat, turnover$saiu), 1), 3), caption = "Horas Trabalhadas x Saiu")
+kable(round(prop.table(table(turnover$departamento, turnover$saiu), 1), 3), caption = "Departamento x Saiu")
+
+```
+### Criar arvore de decisao de 2 niveis, de acordo com o algoritmo CHAID
+```{r}
+controle <- chaid_control(maxheight = 2)
+arvore <- chaid(saiu ~
+                  acidente_trabalho +
+                  promocao_ultimos_5_anos +
+                  departamento +
+                  salario+
+                  satisfacao_cat+
+                  horas_cat,
+                  data = turnover, control = controle)
+plot(arvore, gp = gpar(cex = 0.8))
+```
+
+### Qual a frequência?
+```{r echo = F}
+turnover$no <- predict(arvore, turnover, type = "node")
+
+kable(rbind(table(turnover$no), prop.table(table(turnover$no))))
+
+```
+
+### Probabilidade
+```{r}
+prob_geral = sum(turnover$saiu == "1") / nrow(turnover)
+cro_rpct(turnover$no, turnover$saiu)
+
+turnover$prob <- predict(arvore, turnover, type = "p")[,2]
+turnover$predito <- ifelse(turnover$prob >= prob_geral, "1", "0")
+
+cro(turnover$saiu, turnover$predito)
+
+confusionMatrix(as.factor(turnover$saiu),as.factor(turnover$predito),positive='1')
+
+
+```
+
+
