@@ -75,6 +75,7 @@ refeicoes <- read_excel("doc/Pedidos_Refeicoes.xlsx", sheet="Base de Dados")
 # Transformar variaveis em fator
 refeicoes[sapply(refeicoes, is.character)] <- lapply(refeicoes[sapply(refeicoes, is.character)], as.factor)
 
+str(refeicoes)
 
 ```
 
@@ -157,8 +158,8 @@ rbind(table(refeicoes$no_2niveis), round(prop.table(table(refeicoes$no_2niveis))
 
 ## f) Quantos nos finais sao mais propensos que a base geral a se deixarem influenciar pela nota?
 ```{r}
+
 (prob_geral = sum(refeicoes$Influenciado_por_nota == "Sim") / nrow(refeicoes))
-round(prop.table(table(refeicoes$no_2niveis, refeicoes$Influenciado_por_nota), 1), 3)
 
 ```
 
