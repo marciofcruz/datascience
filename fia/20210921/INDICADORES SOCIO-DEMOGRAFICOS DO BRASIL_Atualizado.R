@@ -7,6 +7,8 @@ if (!file.exists(wd)) {
 setwd(wd)
 getwd()
 
+setwd("C:/Projetos/github.com/datascience/fia/20210921")
+
 rm(list = ls())
 
 options(scipen=999)
